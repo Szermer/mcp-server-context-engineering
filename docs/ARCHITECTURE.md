@@ -3,7 +3,7 @@
 **Version:** 1.0.0
 **Last Updated:** 2025-11-05
 **Status:** Production Ready
-**Related:** [README.md](./README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
+**Related:** [README.md](../README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
 
 ---
 
@@ -1062,4 +1062,4 @@ The MCP Server for Context Engineering implements a **progressive disclosure** a
 **Document version:** 1.0.0
 **Last updated:** 2025-11-05
 **Authors:** Stephen Szermer
-**Related:** [README.md](./README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
+**Related:** [README.md](../README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)

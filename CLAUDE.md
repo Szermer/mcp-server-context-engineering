@@ -15,10 +15,10 @@ This is an **MCP (Model Context Protocol) server** that exposes context engineer
 
 **Documentation:**
 - **[CLAUDE.md](./CLAUDE.md)** (this file) - Quick reference for Claude Code
-- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Step-by-step guide for extending the server
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Deep dive into design principles and system architecture
-- **[DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)** - Rationale for every technical decision
-- **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** - Navigation hub for all documentation
+- **[DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)** - Step-by-step guide for extending the server
+- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Deep dive into design principles and system architecture
+- **[DESIGN_DECISIONS.md](./docs/DESIGN_DECISIONS.md)** - Rationale for every technical decision
+- **[DOCUMENTATION_INDEX.md](./docs/DOCUMENTATION_INDEX.md)** - Navigation hub for all documentation
 
 ## Common Development Commands
 
@@ -71,7 +71,7 @@ The server communicates via stdio and should be configured in Claude Code's MCP 
 
 ## Core Architectural Principles
 
-Before working with the code, understand these foundational principles (see [ARCHITECTURE.md](./ARCHITECTURE.md) for details):
+Before working with the code, understand these foundational principles (see [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for details):
 
 ### 1. Progressive Disclosure
 Load tool definitions and data on-demand, not upfront. The Patterns module implements a three-stage workflow:
@@ -187,7 +187,7 @@ src/
 
 ### Tool Implementation Pattern
 
-Every tool follows this standardized structure (see [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md#adding-a-new-tool) for full guide):
+Every tool follows this standardized structure (see [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md#adding-a-new-tool) for full guide):
 
 ```typescript
 // 1. Tool definition (MCP schema with JSON Schema validation)
@@ -248,7 +248,7 @@ Tools are registered in `src/server.ts` (import, add to tools array, add handler
 
 ## Adding a New Tool
 
-**Quick workflow** (see [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md#adding-a-new-tool) for detailed guide):
+**Quick workflow** (see [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md#adding-a-new-tool) for detailed guide):
 
 1. **Choose module** - patterns/, artifacts/, memory/, or metrics/
 2. **Create tool file** - `src/tools/{module}/{toolName}.ts`
@@ -297,7 +297,7 @@ The Patterns module implements a **three-stage progressive disclosure pattern**:
 
 ### Three-File Skill Pattern
 
-Executable skills use a standardized structure in `~/.shared-patterns/` (see [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md#decision-three-file-pattern-for-skills) for rationale):
+Executable skills use a standardized structure in `~/.shared-patterns/` (see [DESIGN_DECISIONS.md](./docs/DESIGN_DECISIONS.md#decision-three-file-pattern-for-skills) for rationale):
 
 ```
 category/
@@ -388,7 +388,7 @@ describe('toolName', () => {
 
 ## Error Codes Reference
 
-Use these standardized error codes (see [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md#error-handling-patterns) for full guide):
+Use these standardized error codes (see [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md#error-handling-patterns) for full guide):
 
 **Filesystem errors:**
 - `FILE_NOT_FOUND` - File doesn't exist
@@ -500,23 +500,23 @@ Measure these with `getCompressionRatio` and `getPatternReuse` tools.
 
 ## Documentation Hub
 
-This project has extensive documentation organized by depth and audience. See **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** for complete navigation.
+This project has extensive documentation organized by depth and audience. See **[DOCUMENTATION_INDEX.md](./docs/DOCUMENTATION_INDEX.md)** for complete navigation.
 
 ### Quick Reference (5-15 minutes)
 - **[CLAUDE.md](./CLAUDE.md)** (this file) - Quick reference for Claude Code
 - **[README.md](./README.md)** - Project overview, installation, usage examples
 
 ### Developer Guides (30-60 minutes)
-- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Step-by-step guide for extending the server
+- **[DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)** - Step-by-step guide for extending the server
   - Getting started, project structure
   - Adding a new tool (complete walkthrough with code templates)
   - Testing strategies, debugging, common pitfalls
 
 ### Architecture Deep Dives (1-3 hours)
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete architectural overview
+- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Complete architectural overview
   - Six core principles, system architecture, module design
   - Performance, security, testing, future extensibility
-- **[DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)** - Rationale for every technical decision
+- **[DESIGN_DECISIONS.md](./docs/DESIGN_DECISIONS.md)** - Rationale for every technical decision
   - TypeScript vs JavaScript, stdio vs HTTP, filesystem vs database
   - Type system, error handling, token estimation, testing infrastructure
 

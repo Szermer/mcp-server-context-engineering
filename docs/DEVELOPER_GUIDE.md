@@ -896,7 +896,7 @@ git push --tags
 **Documentation:**
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - High-level architecture
 - [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md) - Detailed design rationale
-- [README.md](./README.md) - Usage and setup
+- [README.md](../README.md) - Usage and setup
 
 **Issues:**
 - File issues on GitHub: https://github.com/yourusername/mcp-server-context-engineering/issues

@@ -195,14 +195,15 @@ mcp-server-context-engineering/
 
 ## Documentation
 
+**📚 [Complete Documentation Index](./docs/DOCUMENTATION_INDEX.md)** - Start here for guided navigation
+
 ### Quick Start
 - **[README.md](./README.md)** (this file) - Overview and quick start
-- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Practical guide for extending the server
+- **[DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)** - Practical guide for extending the server
 
 ### Deep Dives
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete architectural overview, design principles, and system architecture
-- **[DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)** - Detailed technical decisions and rationale for every implementation choice
-- **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** - Complete navigation hub for all documentation
+- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Complete architectural overview, design principles, and system architecture
+- **[DESIGN_DECISIONS.md](./docs/DESIGN_DECISIONS.md)** - Detailed technical decisions and rationale for every implementation choice
 
 ### External Resources
 - [Model Context Protocol](https://modelcontextprotocol.io/) - Official MCP specification

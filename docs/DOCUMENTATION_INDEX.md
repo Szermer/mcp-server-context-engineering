@@ -10,7 +10,7 @@
 ### I want to...
 
 **...understand what this project does**
-→ Start with [README.md](./README.md)
+→ Start with [README.md](../README.md)
 
 **...understand the architecture and design principles**
 → Read [ARCHITECTURE.md](./ARCHITECTURE.md)
@@ -30,7 +30,7 @@
 
 ### Level 1: Quick Start (5-10 minutes)
 
-**[README.md](./README.md)** - Project overview
+**[README.md](../README.md)** - Project overview
 - What the MCP server does
 - Quick installation and setup
 - Usage examples
@@ -93,27 +93,27 @@
 
 ### Development
 1. [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Developer workflow and patterns
-2. [README.md](./README.md) - Quick start and installation
-3. [CLAUDE.md](./CLAUDE.md) - Claude Code integration guide
+2. [README.md](../README.md) - Quick start and installation
+3. [CLAUDE.md](../CLAUDE.md) - Claude Code integration guide
 
 ---
 
 ## Document Relationships
 
 ```
-ARCHITECTURE.md
+ARCHITECTURE.md (docs/)
     └─ System architecture and design principles
         │
-        ├─ DESIGN_DECISIONS.md
+        ├─ DESIGN_DECISIONS.md (docs/)
         │   └─ Details every technical decision
         │
-        └─ DEVELOPER_GUIDE.md
+        └─ DEVELOPER_GUIDE.md (docs/)
             └─ Practical guide for implementation
                 │
-                ├─ CLAUDE.md
+                ├─ CLAUDE.md (root)
                 │   └─ Claude Code integration
                 │
-                └─ README.md
+                └─ README.md (root)
                     └─ Quick start and usage
 ```
 
@@ -122,7 +122,7 @@ ARCHITECTURE.md
 ## Reading Paths
 
 ### Path 1: New User
-1. [README.md](./README.md) - Understand what it does
+1. [README.md](../README.md) - Understand what it does
 2. Try running the examples
 3. (Optional) [ARCHITECTURE.md](./ARCHITECTURE.md) - Understand how it works
 
@@ -131,7 +131,7 @@ ARCHITECTURE.md
 ---
 
 ### Path 2: New Developer
-1. [README.md](./README.md) - Quick start
+1. [README.md](../README.md) - Quick start
 2. [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Development workflow
 3. Try adding a simple tool (follow guide step-by-step)
 4. [ARCHITECTURE.md](./ARCHITECTURE.md) - Understand the system
@@ -145,7 +145,7 @@ ARCHITECTURE.md
 1. [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
 2. [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md) - Technical decisions
 3. [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Implementation patterns
-4. [README.md](./README.md) - Current status
+4. [README.md](../README.md) - Current status
 
 **Time:** 2-3 hours
 
@@ -215,11 +215,11 @@ When you make changes to the codebase:
 ## Questions?
 
 **For questions about:**
-- **Usage** → See [README.md](./README.md)
+- **Usage** → See [README.md](../README.md)
 - **Development** → See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)
 - **Architecture** → See [ARCHITECTURE.md](./ARCHITECTURE.md)
 - **Decisions** → See [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
-- **Claude Code integration** → See [CLAUDE.md](./CLAUDE.md)
+- **Claude Code integration** → See [CLAUDE.md](../CLAUDE.md)
 
 **Still have questions?**
 - File an issue on GitHub

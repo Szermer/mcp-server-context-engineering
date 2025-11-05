@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Last Updated:** 2025-11-05
-**Related:** [ARCHITECTURE.md](./ARCHITECTURE.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [README.md](./README.md)
+**Related:** [ARCHITECTURE.md](./ARCHITECTURE.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [README.md](../README.md)
 
 ---
 
