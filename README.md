@@ -1,8 +1,7 @@
 # MCP Server for Context Engineering
 
 **Version:** 1.0.0
-**Status:** Phase 2 - In Development
-**ADR:** [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md)
+**Status:** Production Ready
 
 MCP server that exposes context engineering operations as executable tools, enabling progressive skill loading and achieving 98.7% token reduction through code execution.
 
@@ -203,12 +202,12 @@ mcp-server-context-engineering/
 ### Deep Dives
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete architectural overview, design principles, and system architecture
 - **[DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)** - Detailed technical decisions and rationale for every implementation choice
+- **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** - Complete navigation hub for all documentation
 
-### Related Documentation
-- **[Phase 2 Kickoff](../ClaudeDev/docs/PHASE_2_MCP_SERVER_KICKOFF.md)** - 4-week implementation plan
-- **[ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md)** - Architecture decision record
-- **[Executable Skills Guide](../ClaudeDev/docs/guides/EXECUTABLE_SKILLS_GUIDE.md)** - How to create executable skills
-- **[MCP Architecture](~/.shared-patterns/mcp-integration/ARCHITECTURE.md)** - Three-file pattern design
+### External Resources
+- [Model Context Protocol](https://modelcontextprotocol.io/) - Official MCP specification
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - SDK used by this server
+- [Code Execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp) - Anthropic's blog post on code execution patterns
 
 ## License
 
