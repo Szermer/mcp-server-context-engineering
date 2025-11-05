@@ -1,1 +1,0 @@
-{"version":3,"file":"loadSkill.d.ts","sourceRoot":"","sources":["../../../src/tools/patterns/loadSkill.ts"],"names":[],"mappings":"AAUA,OAAO,EAAE,IAAI,EAAE,MAAM,oCAAoC,CAAC;AAS1D,eAAO,MAAM,aAAa,EAAE,IAwB3B,CAAC;AAkCF,wBAAsB,gBAAgB,CACpC,IAAI,EAAE,OAAO,GACZ,OAAO,CAAC;IAAE,OAAO,EAAE,KAAK,CAAC;QAAE,IAAI,EAAE,MAAM,CAAC;QAAC,IAAI,EAAE,MAAM,CAAA;KAAE,CAAC,CAAA;CAAE,CAAC,CAiD7D"}

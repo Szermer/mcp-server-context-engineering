@@ -1,1 +1,0 @@
-{"version":3,"file":"addNote.d.ts","sourceRoot":"","sources":["../../../src/tools/memory/addNote.ts"],"names":[],"mappings":"AASA,OAAO,EAAE,IAAI,EAAE,MAAM,oCAAoC,CAAC;AAO1D,eAAO,MAAM,WAAW,EAAE,IAuBzB,CAAC;AA4BF,wBAAsB,cAAc,CAClC,IAAI,EAAE,OAAO,GACZ,OAAO,CAAC;IAAE,OAAO,EAAE,KAAK,CAAC;QAAE,IAAI,EAAE,MAAM,CAAC;QAAC,IAAI,EAAE,MAAM,CAAA;KAAE,CAAC,CAAA;CAAE,CAAC,CAuD7D"}
