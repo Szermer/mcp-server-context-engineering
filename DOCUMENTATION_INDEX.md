@@ -21,11 +21,8 @@
 **...add a new tool or contribute code**
 → Follow [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)
 
-**...understand the implementation plan**
-→ Read [Phase 2 Kickoff](../ClaudeDev/docs/PHASE_2_MCP_SERVER_KICKOFF.md)
-
-**...understand the strategic context**
-→ Read [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md)
+**...explore all documentation**
+→ See full index below
 
 ---
 
@@ -88,73 +85,36 @@
 
 ---
 
-### Level 4: Strategic Context (2-3 hours)
-
-**[ADR-006: MCP Code Execution Integration](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md)**
-- Strategic context for MCP integration
-- Problem statement (tool definition overload, token waste)
-- Four-phase implementation plan
-- Alternatives considered
-- Success criteria
-- Risk mitigation
-
-**Who should read:** Product managers, architects, decision makers
-
-**[Phase 2 Kickoff: MCP Server Implementation](../ClaudeDev/docs/PHASE_2_MCP_SERVER_KICKOFF.md)**
-- 4-week implementation timeline
-- Week-by-week objectives
-- Tool specifications
-- Testing strategy
-- Integration plan
-- Success metrics
-
-**Who should read:** Project managers, team leads, developers planning work
-
----
-
 ## By Topic
 
 ### Architecture & Design
 1. [ARCHITECTURE.md](./ARCHITECTURE.md) - High-level architecture
 2. [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md) - Detailed design choices
-3. [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md) - Strategic architecture decision
 
 ### Development
 1. [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Developer workflow and patterns
 2. [README.md](./README.md) - Quick start and installation
-
-### Planning & Process
-1. [Phase 2 Kickoff](../ClaudeDev/docs/PHASE_2_MCP_SERVER_KICKOFF.md) - Implementation plan
-2. [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md) - Strategic context
-
-### Related Systems
-1. [Executable Skills Guide](../ClaudeDev/docs/guides/EXECUTABLE_SKILLS_GUIDE.md) - Pattern library skills
-2. [MCP Architecture](~/.shared-patterns/mcp-integration/ARCHITECTURE.md) - Three-file pattern design
+3. [CLAUDE.md](./CLAUDE.md) - Claude Code integration guide
 
 ---
 
 ## Document Relationships
 
 ```
-Strategic Context
-    │
-    ├─ ADR-006: MCP Code Execution Integration
-    │   └─ Defines overall vision and phases
-    │
-    └─ Phase 2 Kickoff
-        └─ Defines 4-week implementation plan
-            │
-            ├─ ARCHITECTURE.md
-            │   └─ Explains system architecture and design principles
-            │       │
-            │       └─ DESIGN_DECISIONS.md
-            │           └─ Details every technical decision
-            │
-            └─ DEVELOPER_GUIDE.md
-                └─ Practical guide for implementation
-                    │
-                    └─ README.md
-                        └─ Quick start and usage
+ARCHITECTURE.md
+    └─ System architecture and design principles
+        │
+        ├─ DESIGN_DECISIONS.md
+        │   └─ Details every technical decision
+        │
+        └─ DEVELOPER_GUIDE.md
+            └─ Practical guide for implementation
+                │
+                ├─ CLAUDE.md
+                │   └─ Claude Code integration
+                │
+                └─ README.md
+                    └─ Quick start and usage
 ```
 
 ---
@@ -181,14 +141,13 @@ Strategic Context
 
 ---
 
-### Path 3: Architect / Decision Maker
-1. [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md) - Strategic context
-2. [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
-3. [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md) - Technical decisions
-4. [Phase 2 Kickoff](../ClaudeDev/docs/PHASE_2_MCP_SERVER_KICKOFF.md) - Implementation plan
-5. [README.md](./README.md) - Current status
+### Path 3: Architect / Technical Lead
+1. [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
+2. [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md) - Technical decisions
+3. [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Implementation patterns
+4. [README.md](./README.md) - Current status
 
-**Time:** 3-4 hours
+**Time:** 2-3 hours
 
 ---
 
@@ -206,12 +165,12 @@ Strategic Context
 
 | Document | Lines | Size | Reading Time | Audience |
 |----------|-------|------|--------------|----------|
-| README.md | 213 | 6.6 KB | 5-10 min | Everyone |
+| README.md | 210 | 6.5 KB | 5-10 min | Everyone |
 | DEVELOPER_GUIDE.md | 800+ | 25 KB | 30-60 min | Developers |
 | ARCHITECTURE.md | 1000+ | 40 KB | 1-2 hours | Architects |
 | DESIGN_DECISIONS.md | 800+ | 30 KB | 1-2 hours | Tech leads |
-| ADR-006 | 580 | 33 KB | 1-2 hours | Decision makers |
-| Phase 2 Kickoff | 620 | 31 KB | 1 hour | Project managers |
+| CLAUDE.md | 500+ | 20 KB | 30-45 min | Claude Code users |
+| DOCUMENTATION_INDEX.md | 250+ | 8 KB | 15 min | All (navigation) |
 
 ---
 
@@ -260,12 +219,12 @@ When you make changes to the codebase:
 - **Development** → See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)
 - **Architecture** → See [ARCHITECTURE.md](./ARCHITECTURE.md)
 - **Decisions** → See [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
-- **Strategic context** → See [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md)
+- **Claude Code integration** → See [CLAUDE.md](./CLAUDE.md)
 
 **Still have questions?**
 - File an issue on GitHub
-- Contact the maintainers
 - Review the code (it's well-commented!)
+- Check the [External Resources](#external-resources) section
 
 ---
 
