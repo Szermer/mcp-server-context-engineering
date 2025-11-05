@@ -31,6 +31,10 @@ import { addNoteHandler, addNoteTool } from './tools/memory/addNote.js';
 import { getDecisionsHandler, getDecisionsTool } from './tools/memory/getDecisions.js';
 import { getHypothesesHandler, getHypothesesTool } from './tools/memory/getHypotheses.js';
 
+// Import tool handlers - Metrics module
+import { getCompressionRatioHandler, getCompressionRatioTool } from './tools/metrics/getCompressionRatio.js';
+import { getPatternReuseHandler, getPatternReuseTool } from './tools/metrics/getPatternReuse.js';
+
 /**
  * Creates and configures the MCP server
  */
@@ -64,7 +68,9 @@ export function createServer(): Server {
     getDecisionsTool,
     getHypothesesTool,
 
-    // Metrics module will be added in Week 3
+    // Metrics module (2 tools)
+    getCompressionRatioTool,
+    getPatternReuseTool,
   ];
 
   // Handle tool listing
@@ -107,6 +113,13 @@ export function createServer(): Server {
 
         case 'getHypotheses':
           return await getHypothesesHandler(args);
+
+        // Metrics module
+        case 'getCompressionRatio':
+          return await getCompressionRatioHandler(args);
+
+        case 'getPatternReuse':
+          return await getPatternReuseHandler(args);
 
         default:
           throw new Error(`Unknown tool: ${name}`);

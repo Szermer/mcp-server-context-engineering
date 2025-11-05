@@ -10,6 +10,8 @@ import { getSessionCodeHandler, getSessionCodeTool } from './tools/artifacts/get
 import { addNoteHandler, addNoteTool } from './tools/memory/addNote.js';
 import { getDecisionsHandler, getDecisionsTool } from './tools/memory/getDecisions.js';
 import { getHypothesesHandler, getHypothesesTool } from './tools/memory/getHypotheses.js';
+import { getCompressionRatioHandler, getCompressionRatioTool } from './tools/metrics/getCompressionRatio.js';
+import { getPatternReuseHandler, getPatternReuseTool } from './tools/metrics/getPatternReuse.js';
 export function createServer() {
     const server = new Server({
         name: 'mcp-server-context-engineering',
@@ -29,6 +31,8 @@ export function createServer() {
         addNoteTool,
         getDecisionsTool,
         getHypothesesTool,
+        getCompressionRatioTool,
+        getPatternReuseTool,
     ];
     server.setRequestHandler(ListToolsRequestSchema, async () => {
         return { tools };
@@ -55,6 +59,10 @@ export function createServer() {
                     return await getDecisionsHandler(args);
                 case 'getHypotheses':
                     return await getHypothesesHandler(args);
+                case 'getCompressionRatio':
+                    return await getCompressionRatioHandler(args);
+                case 'getPatternReuse':
+                    return await getPatternReuseHandler(args);
                 default:
                     throw new Error(`Unknown tool: ${name}`);
             }
