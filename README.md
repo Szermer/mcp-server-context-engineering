@@ -194,8 +194,17 @@ mcp-server-context-engineering/
 - **Token reduction:** ≥98% measured with real workflows
 - **Memory usage:** < 50MB for typical workload
 
-## Related Documentation
+## Documentation
 
+### Quick Start
+- **[README.md](./README.md)** (this file) - Overview and quick start
+- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Practical guide for extending the server
+
+### Deep Dives
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete architectural overview, design principles, and system architecture
+- **[DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)** - Detailed technical decisions and rationale for every implementation choice
+
+### Related Documentation
 - **[Phase 2 Kickoff](../ClaudeDev/docs/PHASE_2_MCP_SERVER_KICKOFF.md)** - 4-week implementation plan
 - **[ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md)** - Architecture decision record
 - **[Executable Skills Guide](../ClaudeDev/docs/guides/EXECUTABLE_SKILLS_GUIDE.md)** - How to create executable skills

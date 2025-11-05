@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+*.log
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+coverage/
+
+# Temporary files
+*.tmp
+*.swp
