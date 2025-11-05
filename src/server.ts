@@ -21,6 +21,16 @@ import { searchPatternsHandler, searchPatternsTool } from './tools/patterns/sear
 import { loadSkillHandler, loadSkillTool } from './tools/patterns/loadSkill.js';
 import { executeSkillHandler, executeSkillTool } from './tools/patterns/executeSkill.js';
 
+// Import tool handlers - Artifacts module
+import { searchArtifactsHandler, searchArtifactsTool } from './tools/artifacts/searchArtifacts.js';
+import { loadSessionHandler, loadSessionTool } from './tools/artifacts/loadSession.js';
+import { getSessionCodeHandler, getSessionCodeTool } from './tools/artifacts/getSessionCode.js';
+
+// Import tool handlers - Memory module
+import { addNoteHandler, addNoteTool } from './tools/memory/addNote.js';
+import { getDecisionsHandler, getDecisionsTool } from './tools/memory/getDecisions.js';
+import { getHypothesesHandler, getHypothesesTool } from './tools/memory/getHypotheses.js';
+
 /**
  * Creates and configures the MCP server
  */
@@ -43,7 +53,18 @@ export function createServer(): Server {
     searchPatternsTool,
     loadSkillTool,
     executeSkillTool,
-    // More tools will be added as we implement other modules
+
+    // Artifacts module (3 tools)
+    searchArtifactsTool,
+    loadSessionTool,
+    getSessionCodeTool,
+
+    // Memory module (3 tools)
+    addNoteTool,
+    getDecisionsTool,
+    getHypothesesTool,
+
+    // Metrics module will be added in Week 3
   ];
 
   // Handle tool listing
@@ -66,6 +87,26 @@ export function createServer(): Server {
 
         case 'executeSkill':
           return await executeSkillHandler(args);
+
+        // Artifacts module
+        case 'searchArtifacts':
+          return await searchArtifactsHandler(args);
+
+        case 'loadSession':
+          return await loadSessionHandler(args);
+
+        case 'getSessionCode':
+          return await getSessionCodeHandler(args);
+
+        // Memory module
+        case 'addNote':
+          return await addNoteHandler(args);
+
+        case 'getDecisions':
+          return await getDecisionsHandler(args);
+
+        case 'getHypotheses':
+          return await getHypothesesHandler(args);
 
         default:
           throw new Error(`Unknown tool: ${name}`);

@@ -4,6 +4,12 @@ import { CallToolRequestSchema, ListToolsRequestSchema, } from '@modelcontextpro
 import { searchPatternsHandler, searchPatternsTool } from './tools/patterns/searchPatterns.js';
 import { loadSkillHandler, loadSkillTool } from './tools/patterns/loadSkill.js';
 import { executeSkillHandler, executeSkillTool } from './tools/patterns/executeSkill.js';
+import { searchArtifactsHandler, searchArtifactsTool } from './tools/artifacts/searchArtifacts.js';
+import { loadSessionHandler, loadSessionTool } from './tools/artifacts/loadSession.js';
+import { getSessionCodeHandler, getSessionCodeTool } from './tools/artifacts/getSessionCode.js';
+import { addNoteHandler, addNoteTool } from './tools/memory/addNote.js';
+import { getDecisionsHandler, getDecisionsTool } from './tools/memory/getDecisions.js';
+import { getHypothesesHandler, getHypothesesTool } from './tools/memory/getHypotheses.js';
 export function createServer() {
     const server = new Server({
         name: 'mcp-server-context-engineering',
@@ -17,6 +23,12 @@ export function createServer() {
         searchPatternsTool,
         loadSkillTool,
         executeSkillTool,
+        searchArtifactsTool,
+        loadSessionTool,
+        getSessionCodeTool,
+        addNoteTool,
+        getDecisionsTool,
+        getHypothesesTool,
     ];
     server.setRequestHandler(ListToolsRequestSchema, async () => {
         return { tools };
@@ -31,6 +43,18 @@ export function createServer() {
                     return await loadSkillHandler(args);
                 case 'executeSkill':
                     return await executeSkillHandler(args);
+                case 'searchArtifacts':
+                    return await searchArtifactsHandler(args);
+                case 'loadSession':
+                    return await loadSessionHandler(args);
+                case 'getSessionCode':
+                    return await getSessionCodeHandler(args);
+                case 'addNote':
+                    return await addNoteHandler(args);
+                case 'getDecisions':
+                    return await getDecisionsHandler(args);
+                case 'getHypotheses':
+                    return await getHypothesesHandler(args);
                 default:
                     throw new Error(`Unknown tool: ${name}`);
             }

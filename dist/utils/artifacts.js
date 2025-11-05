@@ -1,0 +1,163 @@
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { homedir } from 'os';
+export async function getProjectsWithArtifacts() {
+    const devDir = path.join(homedir(), 'Dev');
+    const projects = [];
+    try {
+        const entries = await fs.readdir(devDir, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.isDirectory() && !entry.name.startsWith('.')) {
+                const artifactsPath = path.join(devDir, entry.name, '.agent-artifacts');
+                try {
+                    await fs.access(artifactsPath);
+                    projects.push(entry.name);
+                }
+                catch {
+                }
+            }
+        }
+        return projects;
+    }
+    catch {
+        return [];
+    }
+}
+export async function searchArtifactsInProjects(keyword, project, limit) {
+    const devDir = path.join(homedir(), 'Dev');
+    const results = [];
+    const projectsToSearch = project
+        ? [project]
+        : await getProjectsWithArtifacts();
+    for (const projectName of projectsToSearch) {
+        const artifactsPath = path.join(devDir, projectName, '.agent-artifacts');
+        try {
+            const entries = await fs.readdir(artifactsPath, { withFileTypes: true });
+            for (const entry of entries) {
+                if (entry.isFile() && entry.name.endsWith('.md')) {
+                    const sessionPath = path.join(artifactsPath, entry.name);
+                    const content = await fs.readFile(sessionPath, 'utf-8');
+                    const sessionId = entry.name.replace('.md', '');
+                    const date = extractDate(sessionId) || 'unknown';
+                    const title = extractTitle(content);
+                    const summary = extractSummary(content);
+                    const hasCode = content.includes('```');
+                    if (keyword) {
+                        const searchText = `${title} ${summary} ${content}`.toLowerCase();
+                        if (!searchText.includes(keyword.toLowerCase())) {
+                            continue;
+                        }
+                    }
+                    results.push({
+                        sessionId,
+                        date,
+                        project: projectName,
+                        title,
+                        summary,
+                        path: sessionPath,
+                        hasCode,
+                    });
+                }
+            }
+        }
+        catch {
+            continue;
+        }
+    }
+    results.sort((a, b) => b.date.localeCompare(a.date));
+    return limit ? results.slice(0, limit) : results;
+}
+export async function loadSessionArtifact(project, sessionId) {
+    const devDir = path.join(homedir(), 'Dev');
+    const sessionPath = path.join(devDir, project, '.agent-artifacts', `${sessionId}.md`);
+    try {
+        const content = await fs.readFile(sessionPath, 'utf-8');
+        return {
+            sessionId,
+            date: extractDate(sessionId) || 'unknown',
+            project,
+            content: {
+                summary: extractSummary(content),
+                decisions: extractSection(content, 'Decisions'),
+                implementations: extractSection(content, 'Implementations'),
+                challenges: extractSection(content, 'Challenges'),
+                nextSteps: extractSection(content, 'Next Steps'),
+            },
+            codeBlocks: extractCodeBlocks(content),
+        };
+    }
+    catch {
+        return null;
+    }
+}
+export async function extractSessionCode(project, sessionId, language) {
+    const artifact = await loadSessionArtifact(project, sessionId);
+    if (!artifact || !artifact.codeBlocks) {
+        return [];
+    }
+    if (language) {
+        return artifact.codeBlocks.filter((block) => block.language.toLowerCase() === language.toLowerCase());
+    }
+    return artifact.codeBlocks;
+}
+function extractDate(sessionId) {
+    const match = sessionId.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match && match[1] ? match[1] : null;
+}
+function extractTitle(content) {
+    const lines = content.split('\n');
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('# ') && !trimmed.startsWith('## ')) {
+            return trimmed.replace(/^#\s+/, '');
+        }
+    }
+    return 'Untitled Session';
+}
+function extractSummary(content) {
+    const summaryMatch = content.match(/##\s*Summary\s*\n\n(.*?)(?=\n##|\n\n##|$)/s);
+    if (summaryMatch && summaryMatch[1]) {
+        return summaryMatch[1].trim().slice(0, 300);
+    }
+    const paragraphMatch = content.match(/^#.*?\n\n(.*?)(?=\n##|$)/s);
+    if (paragraphMatch && paragraphMatch[1]) {
+        return paragraphMatch[1].trim().slice(0, 300);
+    }
+    return 'No summary available';
+}
+function extractSection(content, sectionName) {
+    const regex = new RegExp(`##\\s*${sectionName}\\s*\\n([\\s\\S]*?)(?=\\n##|$)`, 'i');
+    const match = content.match(regex);
+    if (!match || !match[1]) {
+        return [];
+    }
+    const sectionContent = match[1].trim();
+    const lines = sectionContent.split('\n');
+    const items = [];
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+            items.push(trimmed.replace(/^[-*]\s+/, ''));
+        }
+    }
+    return items;
+}
+function extractCodeBlocks(content) {
+    const codeBlocks = [];
+    const regex = /```(\w+)(?:\s+(.+?))?\n([\s\S]*?)```/g;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+        const language = match[1] || 'text';
+        const file = match[2];
+        const code = match[3]?.trim() || '';
+        if (code) {
+            codeBlocks.push({
+                language,
+                code,
+                file,
+            });
+        }
+    }
+    return codeBlocks;
+}
+//# sourceMappingURL=artifacts.js.map
