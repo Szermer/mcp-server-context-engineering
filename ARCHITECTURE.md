@@ -2,8 +2,8 @@
 
 **Version:** 1.0.0
 **Last Updated:** 2025-11-05
-**Status:** Phase 2 Complete (Weeks 1-3)
-**Related:** [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md) | [README.md](./README.md)
+**Status:** Production Ready
+**Related:** [README.md](./README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
 
 ---
 
@@ -810,9 +810,9 @@ throw new Error(`File not found: ${fullPath}`);
 throw new Error(`Pattern not found: ${category}/${patternName}`);
 ```
 
-### Phase 4: Privacy Layer
+### Future: Privacy Layer
 
-See ADR-006 for tokenization architecture. Key features:
+Planned privacy features:
 - PII tokenization (email, phone, SSN)
 - Configurable data flow rules
 - Sensitive data never enters model context
@@ -1062,4 +1062,4 @@ The MCP Server for Context Engineering implements a **progressive disclosure** a
 **Document version:** 1.0.0
 **Last updated:** 2025-11-05
 **Authors:** Stephen Szermer
-**Related:** [ADR-006](../ClaudeDev/docs/architecture/decisions/006-mcp-code-execution-integration.md) | [README.md](./README.md) | [Phase 2 Kickoff](../ClaudeDev/docs/PHASE_2_MCP_SERVER_KICKOFF.md)
+**Related:** [README.md](./README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
