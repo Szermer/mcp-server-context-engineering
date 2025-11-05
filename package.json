@@ -1,0 +1,40 @@
+{
+  "name": "mcp-server-context-engineering",
+  "version": "1.0.0",
+  "description": "MCP server for context engineering operations - exposes skills and artifacts as executable tools",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "mcp-server-context-engineering": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "context-engineering",
+    "ai-agents",
+    "skills",
+    "patterns"
+  ],
+  "author": "Stephen Szermer",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
