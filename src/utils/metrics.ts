@@ -33,19 +33,39 @@ export async function calculateCompressionRatio(
   projectPath: string,
   sessionId: string
 ): Promise<CompressionMetrics | null> {
-  const metricsPath = path.join(
-    projectPath,
-    '.agent-artifacts',
-    `${sessionId}.metrics.json`
-  );
+  const artifactsDir = path.join(projectPath, '.agent-artifacts');
+
+  // Try directory-based structure first (primary format)
+  const dirMetricsPath = path.join(artifactsDir, sessionId, 'compression-metrics.json');
 
   try {
-    const content = await fs.readFile(metricsPath, 'utf-8');
+    const content = await fs.readFile(dirMetricsPath, 'utf-8');
     const metrics = JSON.parse(content);
 
-    // Extract token counts from metrics file
-    const originalTokens = metrics.tokens?.original || 0;
-    const compressedTokens = metrics.tokens?.compressed || 0;
+    // Handle different metrics formats
+    let originalTokens = 0;
+    let compressedTokens = 0;
+
+    // Format 1: compressionMetrics.inputTokens/outputArtifacts
+    if (metrics.compressionMetrics) {
+      originalTokens = metrics.compressionMetrics.inputTokens?.total || 0;
+      compressedTokens = metrics.compressionMetrics.outputArtifacts?.total || 0;
+    }
+    // Format 2: compression.raw_context_tokens/compressed_tokens
+    else if (metrics.compression) {
+      originalTokens = metrics.compression.raw_context_tokens || 0;
+      compressedTokens = metrics.compression.compressed_tokens || 0;
+    }
+    // Format 3: metrics.original/compressed
+    else if (metrics.metrics) {
+      originalTokens = metrics.metrics.original_context_size_tokens || 0;
+      compressedTokens = metrics.metrics.finalization_pack_size_tokens || 0;
+    }
+    // Format 4: tokens.original/compressed
+    else if (metrics.tokens) {
+      originalTokens = metrics.tokens.original || 0;
+      compressedTokens = metrics.tokens.compressed || 0;
+    }
 
     if (originalTokens === 0) {
       return null;
@@ -65,7 +85,36 @@ export async function calculateCompressionRatio(
       savings,
     };
   } catch {
-    return null;
+    // Fall back to flat file structure
+    const flatMetricsPath = path.join(artifactsDir, `${sessionId}.metrics.json`);
+
+    try {
+      const content = await fs.readFile(flatMetricsPath, 'utf-8');
+      const metrics = JSON.parse(content);
+
+      const originalTokens = metrics.tokens?.original || 0;
+      const compressedTokens = metrics.tokens?.compressed || 0;
+
+      if (originalTokens === 0) {
+        return null;
+      }
+
+      const compressionRatio =
+        ((originalTokens - compressedTokens) / originalTokens) * 100;
+      const savings = originalTokens - compressedTokens;
+
+      return {
+        sessionId,
+        project: path.basename(projectPath),
+        date: extractDate(sessionId) || 'unknown',
+        originalTokens,
+        compressedTokens,
+        compressionRatio,
+        savings,
+      };
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -82,6 +131,7 @@ export async function getProjectCompressionMetrics(
     const entries = await fs.readdir(artifactsPath, { withFileTypes: true });
 
     for (const entry of entries) {
+      // Check flat file structure (backwards compatibility)
       if (entry.isFile() && entry.name.endsWith('.metrics.json')) {
         const sessionId = entry.name.replace('.metrics.json', '');
         const sessionMetrics = await calculateCompressionRatio(
@@ -91,6 +141,33 @@ export async function getProjectCompressionMetrics(
 
         if (sessionMetrics) {
           metrics.push(sessionMetrics);
+        }
+      }
+
+      // Check directory-based structure (primary format)
+      if (entry.isDirectory() && !entry.name.startsWith('.')) {
+        const sessionId = entry.name;
+        const metricsPath = path.join(
+          artifactsPath,
+          sessionId,
+          'compression-metrics.json'
+        );
+
+        try {
+          // Check if compression-metrics.json exists
+          await fs.access(metricsPath);
+
+          const sessionMetrics = await calculateCompressionRatio(
+            projectPath,
+            sessionId
+          );
+
+          if (sessionMetrics) {
+            metrics.push(sessionMetrics);
+          }
+        } catch {
+          // No compression-metrics.json in this directory
+          continue;
         }
       }
     }

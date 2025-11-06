@@ -85,6 +85,7 @@ export async function searchArtifactsInProjects(
       const entries = await fs.readdir(artifactsPath, { withFileTypes: true });
 
       for (const entry of entries) {
+        // Check flat file structure (backwards compatibility)
         if (entry.isFile() && entry.name.endsWith('.md')) {
           const sessionPath = path.join(artifactsPath, entry.name);
           const content = await fs.readFile(sessionPath, 'utf-8');
@@ -114,6 +115,65 @@ export async function searchArtifactsInProjects(
             hasCode,
           });
         }
+
+        // Check directory-based structure (primary format)
+        if (entry.isDirectory() && !entry.name.startsWith('.')) {
+          const sessionDir = path.join(artifactsPath, entry.name);
+
+          // Look for session-summary.md or finalization-pack.json
+          const summaryPath = path.join(sessionDir, 'session-summary.md');
+          const packPath = path.join(sessionDir, 'finalization-pack.json');
+
+          try {
+            let content = '';
+            let sessionPath = '';
+
+            // Try to read session-summary.md first
+            try {
+              content = await fs.readFile(summaryPath, 'utf-8');
+              sessionPath = summaryPath;
+            } catch {
+              // Fall back to finalization-pack.json
+              try {
+                const packContent = await fs.readFile(packPath, 'utf-8');
+                const pack = JSON.parse(packContent);
+                // Convert JSON pack to searchable text
+                content = JSON.stringify(pack, null, 2);
+                sessionPath = packPath;
+              } catch {
+                // No valid session file found
+                continue;
+              }
+            }
+
+            const sessionId = entry.name;
+            const date = extractDate(sessionId) || 'unknown';
+            const title = extractTitle(content);
+            const summary = extractSummary(content);
+            const hasCode = content.includes('```') || content.includes('"code"');
+
+            // Filter by keyword if provided
+            if (keyword) {
+              const searchText = `${title} ${summary} ${content}`.toLowerCase();
+              if (!searchText.includes(keyword.toLowerCase())) {
+                continue;
+              }
+            }
+
+            results.push({
+              sessionId,
+              date,
+              project: projectName,
+              title,
+              summary,
+              path: sessionPath,
+              hasCode,
+            });
+          } catch {
+            // Session directory not accessible or invalid
+            continue;
+          }
+        }
       }
     } catch {
       // Project artifacts directory not accessible
@@ -136,29 +196,75 @@ export async function loadSessionArtifact(
   sessionId: string
 ): Promise<SessionArtifact | null> {
   const devDir = path.join(homedir(), 'Dev');
-  const sessionPath = path.join(
-    devDir,
-    project,
-    '.agent-artifacts',
-    `${sessionId}.md`
-  );
+  const artifactsDir = path.join(devDir, project, '.agent-artifacts');
+
+  // Try directory-based structure first (primary format)
+  const sessionDir = path.join(artifactsDir, sessionId);
+  const summaryPath = path.join(sessionDir, 'session-summary.md');
+  const packPath = path.join(sessionDir, 'finalization-pack.json');
 
   try {
-    const content = await fs.readFile(sessionPath, 'utf-8');
+    // Try to read session-summary.md
+    try {
+      const content = await fs.readFile(summaryPath, 'utf-8');
 
-    return {
-      sessionId,
-      date: extractDate(sessionId) || 'unknown',
-      project,
-      content: {
-        summary: extractSummary(content),
-        decisions: extractSection(content, 'Decisions'),
-        implementations: extractSection(content, 'Implementations'),
-        challenges: extractSection(content, 'Challenges'),
-        nextSteps: extractSection(content, 'Next Steps'),
-      },
-      codeBlocks: extractCodeBlocks(content),
-    };
+      return {
+        sessionId,
+        date: extractDate(sessionId) || 'unknown',
+        project,
+        content: {
+          summary: extractSummary(content),
+          decisions: extractSection(content, 'Decisions'),
+          implementations: extractSection(content, 'Implementations'),
+          challenges: extractSection(content, 'Challenges'),
+          nextSteps: extractSection(content, 'Next Steps'),
+        },
+        codeBlocks: extractCodeBlocks(content),
+      };
+    } catch {
+      // Try finalization-pack.json
+      try {
+        const packContent = await fs.readFile(packPath, 'utf-8');
+        const pack = JSON.parse(packContent);
+
+        // Extract data from finalization pack
+        return {
+          sessionId,
+          date: pack.metadata?.date || extractDate(sessionId) || 'unknown',
+          project,
+          content: {
+            summary: pack.summary || 'No summary available',
+            decisions: pack.decisions || [],
+            implementations: pack.implementations || [],
+            challenges: pack.challenges || [],
+            nextSteps: pack.nextSteps || pack.next_steps || [],
+          },
+          codeBlocks: pack.codeBlocks || pack.code_blocks || [],
+        };
+      } catch {
+        // Fall back to flat file structure
+        const flatPath = path.join(artifactsDir, `${sessionId}.md`);
+        try {
+          const content = await fs.readFile(flatPath, 'utf-8');
+
+          return {
+            sessionId,
+            date: extractDate(sessionId) || 'unknown',
+            project,
+            content: {
+              summary: extractSummary(content),
+              decisions: extractSection(content, 'Decisions'),
+              implementations: extractSection(content, 'Implementations'),
+              challenges: extractSection(content, 'Challenges'),
+              nextSteps: extractSection(content, 'Next Steps'),
+            },
+            codeBlocks: extractCodeBlocks(content),
+          };
+        } catch {
+          return null;
+        }
+      }
+    }
   } catch {
     return null;
   }
