@@ -4,10 +4,18 @@
  * Tests the three search tools: semanticSearch, indexSession, getSearchStats
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { readFile } from 'fs/promises';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
+import {
+  semanticSearchTool,
+  semanticSearchHandler,
+  indexSessionTool,
+  indexSessionHandler,
+  getSearchStatsTool,
+  getSearchStatsHandler
+} from '../../src/tools/search/index.js';
 
 // Note: These tests focus on structure, validation, and error handling.
 // Full integration tests require GEMINI_API_KEY and actual Google File Search setup.
@@ -16,21 +24,23 @@ describe('Search Module', () => {
   describe('semanticSearch', () => {
     describe('tool definition', () => {
       it('should have correct tool name', () => {
-        // Tool should be named 'semanticSearch'
-        expect(true).toBe(true);
+        expect(semanticSearchTool.name).toBe('semanticSearch');
       });
 
       it('should have required input parameters', () => {
-        // Should require: query, projectPath
-        // Should allow optional: maxResults
-        expect(true).toBe(true);
+        const schema = semanticSearchTool.inputSchema;
+        expect(schema.type).toBe('object');
+        expect(schema.required).toContain('query');
+        expect(schema.required).toContain('projectPath');
+        expect(schema.required).not.toContain('maxResults'); // optional
       });
 
       it('should validate input schema', () => {
-        // query: string (required)
-        // projectPath: string (required)
-        // maxResults: number (optional, default: 5)
-        expect(true).toBe(true);
+        const props = semanticSearchTool.inputSchema.properties;
+        expect(props.query.type).toBe('string');
+        expect(props.projectPath.type).toBe('string');
+        expect(props.maxResults?.type).toBe('number');
+        expect(props.maxResults?.default).toBe(5);
       });
     });
 
@@ -149,21 +159,23 @@ describe('Search Module', () => {
   describe('indexSession', () => {
     describe('tool definition', () => {
       it('should have correct tool name', () => {
-        // Tool should be named 'indexSession'
-        expect(true).toBe(true);
+        expect(indexSessionTool.name).toBe('indexSession');
       });
 
       it('should have required input parameters', () => {
-        // Should require: projectPath, sessionId
-        // Should allow optional: force
-        expect(true).toBe(true);
+        const schema = indexSessionTool.inputSchema;
+        expect(schema.type).toBe('object');
+        expect(schema.required).toContain('projectPath');
+        expect(schema.required).toContain('sessionId');
+        expect(schema.required).not.toContain('force'); // optional
       });
 
       it('should validate input schema', () => {
-        // projectPath: string (required)
-        // sessionId: string (required)
-        // force: boolean (optional, default: false)
-        expect(true).toBe(true);
+        const props = indexSessionTool.inputSchema.properties;
+        expect(props.projectPath.type).toBe('string');
+        expect(props.sessionId.type).toBe('string');
+        expect(props.force?.type).toBe('boolean');
+        expect(props.force?.default).toBe(false);
       });
     });
 
@@ -329,18 +341,18 @@ describe('Search Module', () => {
   describe('getSearchStats', () => {
     describe('tool definition', () => {
       it('should have correct tool name', () => {
-        // Tool should be named 'getSearchStats'
-        expect(true).toBe(true);
+        expect(getSearchStatsTool.name).toBe('getSearchStats');
       });
 
       it('should have required input parameters', () => {
-        // Should require: projectPath
-        expect(true).toBe(true);
+        const schema = getSearchStatsTool.inputSchema;
+        expect(schema.type).toBe('object');
+        expect(schema.required).toContain('projectPath');
       });
 
       it('should validate input schema', () => {
-        // projectPath: string (required)
-        expect(true).toBe(true);
+        const props = getSearchStatsTool.inputSchema.properties;
+        expect(props.projectPath.type).toBe('string');
       });
     });
 
