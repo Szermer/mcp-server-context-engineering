@@ -26,6 +26,7 @@
   "author": "Stephen Szermer",
   "license": "MIT",
   "dependencies": {
+    "@google/genai": "^1.29.0",
     "@modelcontextprotocol/sdk": "^0.5.0"
   },
   "devDependencies": {

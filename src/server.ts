@@ -6,6 +6,7 @@
  * - Artifacts module: searchArtifacts, loadSession, getSessionCode
  * - Memory module: addNote, getDecisions, getHypotheses
  * - Metrics module: getCompressionRatio, getPatternReuse
+ * - Search module: semanticSearch, indexSession, getSearchStats
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -34,6 +35,11 @@ import { getHypothesesHandler, getHypothesesTool } from './tools/memory/getHypot
 // Import tool handlers - Metrics module
 import { getCompressionRatioHandler, getCompressionRatioTool } from './tools/metrics/getCompressionRatio.js';
 import { getPatternReuseHandler, getPatternReuseTool } from './tools/metrics/getPatternReuse.js';
+
+// Import tool handlers - Search module
+import { semanticSearchHandler, semanticSearchTool } from './tools/search/semanticSearch.js';
+import { indexSessionHandler, indexSessionTool } from './tools/search/indexSession.js';
+import { getSearchStatsHandler, getSearchStatsTool } from './tools/search/getSearchStats.js';
 
 /**
  * Creates and configures the MCP server
@@ -71,6 +77,11 @@ export function createServer(): Server {
     // Metrics module (2 tools)
     getCompressionRatioTool,
     getPatternReuseTool,
+
+    // Search module (3 tools)
+    semanticSearchTool,
+    indexSessionTool,
+    getSearchStatsTool,
   ];
 
   // Handle tool listing
@@ -120,6 +131,16 @@ export function createServer(): Server {
 
         case 'getPatternReuse':
           return await getPatternReuseHandler(args);
+
+        // Search module
+        case 'semanticSearch':
+          return await semanticSearchHandler(args);
+
+        case 'indexSession':
+          return await indexSessionHandler(args);
+
+        case 'getSearchStats':
+          return await getSearchStatsHandler(args);
 
         default:
           throw new Error(`Unknown tool: ${name}`);
