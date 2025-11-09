@@ -9,7 +9,8 @@
  * - Search module: semanticSearch, indexSession, getSearchStats
  * - Session module: start_session_coordination, save_session_note, session_search,
  *                   check_duplicate_work, get_session_stats, extract_session_memories,
- *                   finalize_session_coordination
+ *                   finalize_session_coordination, track_constraint, get_constraints,
+ *                   lift_constraint, check_constraint_violation
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -52,6 +53,10 @@ import { checkDuplicateWorkHandler, checkDuplicateWorkTool } from './tools/sessi
 import { getSessionStatsHandler, getSessionStatsTool } from './tools/session/getSessionStats.js';
 import { extractSessionMemoriesHandler, extractSessionMemoriesTool } from './tools/session/extractSessionMemories.js';
 import { finalizeSessionCoordinationHandler, finalizeSessionCoordinationTool } from './tools/session/finalizeSessionCoordination.js';
+import { trackConstraintHandler, trackConstraintTool } from './tools/session/trackConstraint.js';
+import { getConstraintsHandler, getConstraintsTool } from './tools/session/getConstraints.js';
+import { liftConstraintHandler, liftConstraintTool } from './tools/session/liftConstraint.js';
+import { checkConstraintViolationHandler, checkConstraintViolationTool } from './tools/session/checkConstraintViolation.js';
 
 /**
  * Creates and configures the MCP server
@@ -95,7 +100,7 @@ export function createServer(): Server {
     indexSessionTool,
     getSearchStatsTool,
 
-    // Session module (7 tools)
+    // Session module (11 tools)
     startSessionCoordinationTool,
     saveSessionNoteTool,
     sessionSearchTool,
@@ -103,6 +108,10 @@ export function createServer(): Server {
     getSessionStatsTool,
     extractSessionMemoriesTool,
     finalizeSessionCoordinationTool,
+    trackConstraintTool,
+    getConstraintsTool,
+    liftConstraintTool,
+    checkConstraintViolationTool,
   ];
 
   // Handle tool listing
@@ -184,6 +193,18 @@ export function createServer(): Server {
 
         case 'finalize_session_coordination':
           return await finalizeSessionCoordinationHandler(args);
+
+        case 'track_constraint':
+          return await trackConstraintHandler(args);
+
+        case 'get_constraints':
+          return await getConstraintsHandler(args);
+
+        case 'lift_constraint':
+          return await liftConstraintHandler(args);
+
+        case 'check_constraint_violation':
+          return await checkConstraintViolationHandler(args);
 
         default:
           throw new Error(`Unknown tool: ${name}`);
