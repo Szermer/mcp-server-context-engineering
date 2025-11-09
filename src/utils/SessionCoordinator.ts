@@ -12,8 +12,20 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { OpenAI } from 'openai';
 
 export interface SessionNote {
-  type: 'decision' | 'hypothesis' | 'blocker' | 'learning' | 'pattern';
+  type: 'decision' | 'hypothesis' | 'blocker' | 'learning' | 'pattern' | 'constraint';
   content: string;
+  metadata?: Record<string, any>;
+}
+
+export interface Constraint {
+  id: string;
+  content: string;
+  detected_from: 'auto' | 'explicit';
+  timestamp: string;
+  scope: 'session' | 'task' | 'file';
+  status: 'active' | 'lifted';
+  keywords: string[];
+  violated_count: number;
   metadata?: Record<string, any>;
 }
 
@@ -36,6 +48,15 @@ export class SessionCoordinator {
     const qdrantUrl = process.env.QDRANT_URL;
     const qdrantApiKey = process.env.QDRANT_API_KEY;
     const openaiApiKey = process.env.OPENAI_API_KEY;
+
+    // Debug: Log environment variable status
+    console.error('[SessionCoordinator] Environment check:', {
+      hasQdrantUrl: !!qdrantUrl,
+      hasQdrantApiKey: !!qdrantApiKey,
+      hasOpenAIKey: !!openaiApiKey,
+      qdrantUrlLength: qdrantUrl?.length || 0,
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('QDRANT') || k.includes('OPENAI'))
+    });
 
     if (!qdrantUrl || !qdrantApiKey) {
       throw new Error('Missing QDRANT_URL or QDRANT_API_KEY environment variables');
@@ -73,6 +94,8 @@ export class SessionCoordinator {
 
       if (exists) {
         console.error(`📦 Session collection already exists: ${this.collectionName}`);
+        // Ensure payload index exists on existing collection
+        await this.ensurePayloadIndex();
         return;
       }
 
@@ -86,12 +109,35 @@ export class SessionCoordinator {
 
       console.error(`✅ Session collection created: ${this.collectionName}`);
 
+      // Create payload index on 'type' field for efficient filtering
+      await this.ensurePayloadIndex();
+
       // Optionally seed with relevant past knowledge
       await this.seedFromArchive();
 
     } catch (error: any) {
       console.error(`❌ Failed to initialize session: ${error.message}`);
       throw error;
+    }
+  }
+
+  /**
+   * Ensure payload index exists on 'type' field for efficient filtering
+   */
+  private async ensurePayloadIndex(): Promise<void> {
+    try {
+      await this.qdrant.createPayloadIndex(this.collectionName, {
+        field_name: 'type',
+        field_schema: 'keyword'
+      });
+      console.error(`✅ Created payload index on 'type' field`);
+    } catch (error: any) {
+      // Index might already exist, which is fine
+      if (error.message?.includes('already exists')) {
+        console.error(`   Payload index already exists (OK)`);
+      } else {
+        console.error(`⚠️  Failed to create payload index: ${error.message}`);
+      }
     }
   }
 
@@ -198,14 +244,12 @@ export class SessionCoordinator {
    */
   async getNotesByType(type: SessionNote['type']): Promise<SearchResult[]> {
     try {
-      // Search with high limit to get all notes of this type
-      // We'll use a generic embedding that matches the type
-      const typeEmbedding = await this.generateEmbedding(type);
-
-      const result = await this.qdrant.search(this.collectionName, {
-        vector: typeEmbedding,
+      // Use scroll API to retrieve all points of this type
+      // This is more reliable than semantic search with filters
+      const result = await this.qdrant.scroll(this.collectionName, {
         limit: 100,
         with_payload: true,
+        with_vector: false,
         filter: {
           must: [
             {
@@ -216,12 +260,15 @@ export class SessionCoordinator {
         }
       });
 
-      return result.map(r => ({
-        score: r.score || 1.0,
-        type: r.payload?.type as string || 'unknown',
-        content: r.payload?.content as string || '',
-        timestamp: r.payload?.timestamp as string || '',
-        metadata: r.payload as Record<string, any>
+      // Extract points from scroll response
+      const points = result.points || [];
+
+      return points.map(point => ({
+        score: 1.0, // No semantic score for exact matches
+        type: point.payload?.type as string || 'unknown',
+        content: point.payload?.content as string || '',
+        timestamp: point.payload?.timestamp as string || '',
+        metadata: point.payload as Record<string, any>
       }));
 
     } catch (error: any) {
@@ -308,7 +355,7 @@ export class SessionCoordinator {
 
     // Count notes by type
     const notesByType: Record<string, number> = {};
-    const allTypes: SessionNote['type'][] = ['decision', 'hypothesis', 'blocker', 'learning', 'pattern'];
+    const allTypes: SessionNote['type'][] = ['decision', 'hypothesis', 'blocker', 'learning', 'pattern', 'constraint'];
 
     for (const type of allTypes) {
       const notes = await this.getNotesByType(type);
@@ -321,5 +368,200 @@ export class SessionCoordinator {
       totalNotes: collectionInfo.points_count || 0,
       notesByType
     };
+  }
+
+  /**
+   * Track a constraint (explicit or auto-detected)
+   */
+  async trackConstraint(
+    content: string,
+    detectedFrom: 'auto' | 'explicit' = 'explicit',
+    scope: 'session' | 'task' | 'file' = 'session',
+    keywords?: string[]
+  ): Promise<Constraint> {
+    const constraint: Constraint = {
+      id: `constraint-${Date.now()}`,
+      content,
+      detected_from: detectedFrom,
+      timestamp: new Date().toISOString(),
+      scope,
+      status: 'active',
+      keywords: keywords || this.extractKeywords(content),
+      violated_count: 0
+    };
+
+    // Save as a session note
+    await this.saveNote({
+      type: 'constraint',
+      content,
+      metadata: {
+        constraint_id: constraint.id,
+        detected_from: detectedFrom,
+        scope,
+        status: 'active',
+        keywords: constraint.keywords
+      }
+    });
+
+    console.log(`🔒 Tracked constraint: ${content}`);
+    return constraint;
+  }
+
+  /**
+   * Get all active constraints
+   */
+  async getActiveConstraints(): Promise<Constraint[]> {
+    const constraintNotes = await this.getNotesByType('constraint');
+
+    return constraintNotes
+      .filter(note => note.metadata?.status === 'active')
+      .map(note => ({
+        id: note.metadata?.constraint_id || `constraint-${Date.now()}`,
+        content: note.content,
+        detected_from: note.metadata?.detected_from || 'explicit',
+        timestamp: note.timestamp,
+        scope: note.metadata?.scope || 'session',
+        status: 'active' as const,
+        keywords: note.metadata?.keywords || [],
+        violated_count: note.metadata?.violated_count || 0,
+        metadata: note.metadata
+      }));
+  }
+
+  /**
+   * Lift (deactivate) a constraint
+   */
+  async liftConstraint(constraintId: string): Promise<void> {
+    // Get constraint notes
+    const constraintNotes = await this.getNotesByType('constraint');
+    const constraint = constraintNotes.find(n => n.metadata?.constraint_id === constraintId);
+
+    if (!constraint) {
+      throw new Error(`Constraint not found: ${constraintId}`);
+    }
+
+    // Save a new note marking it as lifted
+    await this.saveNote({
+      type: 'constraint',
+      content: `[LIFTED] ${constraint.content}`,
+      metadata: {
+        constraint_id: constraintId,
+        detected_from: constraint.metadata?.detected_from,
+        scope: constraint.metadata?.scope,
+        status: 'lifted',
+        keywords: constraint.metadata?.keywords,
+        lifted_at: new Date().toISOString()
+      }
+    });
+
+    console.log(`🔓 Lifted constraint: ${constraint.content}`);
+  }
+
+  /**
+   * Check if a proposed action would violate any active constraints
+   */
+  async checkViolation(proposedAction: string): Promise<{
+    violated: boolean;
+    violations: Array<{
+      constraint: Constraint;
+      severity: 'high' | 'medium' | 'low';
+      reason: string;
+    }>;
+  }> {
+    const activeConstraints = await this.getActiveConstraints();
+    const violations: Array<{
+      constraint: Constraint;
+      severity: 'high' | 'medium' | 'low';
+      reason: string;
+    }> = [];
+
+    // Generate embedding for proposed action
+    const actionEmbedding = await this.generateEmbedding(proposedAction);
+
+    // Check each active constraint
+    for (const constraint of activeConstraints) {
+      const constraintEmbedding = await this.generateEmbedding(constraint.content);
+
+      // Calculate semantic similarity
+      const similarity = this.cosineSimilarity(actionEmbedding, constraintEmbedding);
+
+      // Also check keyword matches
+      const keywordMatch = this.checkKeywordMatch(proposedAction, constraint.keywords);
+
+      // Determine if this is a violation
+      if (similarity > 0.5 || keywordMatch) {
+        // Determine severity based on constraint type and scope
+        const severity = constraint.scope === 'session' ? 'high' : 'medium';
+
+        violations.push({
+          constraint,
+          severity,
+          reason: keywordMatch
+            ? `Matches constraint keywords: ${constraint.keywords.join(', ')}`
+            : `Semantically similar to constraint (${(similarity * 100).toFixed(0)}% match)`
+        });
+      }
+    }
+
+    return {
+      violated: violations.length > 0,
+      violations
+    };
+  }
+
+  /**
+   * Extract keywords from constraint text
+   */
+  private extractKeywords(text: string): string[] {
+    const keywords: string[] = [];
+    const lowerText = text.toLowerCase();
+
+    // Common constraint indicators
+    const indicators = [
+      'no ', 'not ', "don't ", "doesn't ", 'never ',
+      'must ', 'always ', 'require ', 'should ',
+      'avoid ', 'prevent ', 'prohibit ', 'forbidden '
+    ];
+
+    // Check for indicators and extract following words
+    for (const indicator of indicators) {
+      const index = lowerText.indexOf(indicator);
+      if (index !== -1) {
+        const afterIndicator = lowerText.slice(index + indicator.length);
+        const words = afterIndicator.split(/\s+/).slice(0, 5); // Get next 5 words
+        keywords.push(indicator.trim(), ...words.filter(w => w.length > 2));
+      }
+    }
+
+    return [...new Set(keywords)]; // Remove duplicates
+  }
+
+  /**
+   * Check if text contains constraint keywords
+   */
+  private checkKeywordMatch(text: string, keywords: string[]): boolean {
+    const lowerText = text.toLowerCase();
+    return keywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
+  }
+
+  /**
+   * Calculate cosine similarity between two vectors
+   */
+  private cosineSimilarity(a: number[], b: number[]): number {
+    if (a.length !== b.length) return 0;
+
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+
+    for (let i = 0; i < a.length; i++) {
+      const aVal = a[i] ?? 0;
+      const bVal = b[i] ?? 0;
+      dotProduct += aVal * bVal;
+      normA += aVal * aVal;
+      normB += bVal * bVal;
+    }
+
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 }
