@@ -1,7 +1,7 @@
 # Developer Guide
 
 **Version:** 1.0.0
-**Last Updated:** 2025-11-05
+**Last Updated:** 2025-11-07
 **For:** Developers extending or contributing to the MCP server
 
 ---
@@ -88,7 +88,11 @@ mcp-server-context-engineering/
 │   │   │   └── executeSkill.ts
 │   │   ├── artifacts/             # Artifacts module (3 tools)
 │   │   ├── memory/                # Memory module (3 tools)
-│   │   └── metrics/               # Metrics module (2 tools)
+│   │   ├── metrics/               # Metrics module (2 tools)
+│   │   └── search/                # Search module (3 tools)
+│   │       ├── semanticSearch.ts
+│   │       ├── indexSession.ts
+│   │       └── getSearchStats.ts
 │   └── utils/                     # Shared utilities
 │       ├── filesystem.ts          # Pattern library access
 │       ├── artifacts.ts           # Finalization pack access
@@ -100,7 +104,8 @@ mcp-server-context-engineering/
 │       ├── patterns.test.ts
 │       ├── artifacts.test.ts
 │       ├── memory.test.ts
-│       └── metrics.test.ts
+│       ├── metrics.test.ts
+│       └── search.test.ts
 ├── dist/                          # Compiled JavaScript (gitignored)
 ├── package.json
 ├── tsconfig.json
@@ -123,6 +128,7 @@ Tools are organized into modules:
 - **patterns/** - Pattern library operations
 - **artifacts/** - Finalization pack operations
 - **memory/** - Session memory operations
+- **search/** - Semantic search operations (requires GEMINI_API_KEY)
 - **metrics/** - Performance tracking
 
 If your tool doesn't fit existing modules, consider creating a new module.

@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is an **MCP (Model Context Protocol) server** that exposes context engineering operations as executable tools. It enables AI agents to progressively load skills and patterns, achieving **98.7% token reduction** compared to loading all context upfront.
+This is an **MCP (Model Context Protocol) server** that exposes context engineering operations as executable tools. It enables AI agents to progressively load skills and patterns, achieving **98.7-99.1% token reduction** compared to loading all context upfront.
 
 **Primary Technologies:**
 - **Runtime**: Node.js 18+ with ES Modules
 - **Language**: TypeScript (strict mode)
 - **Framework**: @modelcontextprotocol/sdk v0.5.0
-- **Testing**: Vitest with 90 passing tests
+- **Testing**: Vitest with 165+ passing tests
 - **Transport**: stdio (standard input/output)
+- **Search**: Google File Search API (Gemini) for semantic artifact search
 
 **Documentation:**
 - **[CLAUDE.md](./CLAUDE.md)** (this file) - Quick reference for Claude Code
@@ -39,7 +40,7 @@ npm run clean
 
 ### Testing
 ```bash
-# Run all tests (90 tests across 4 modules)
+# Run all tests (165+ tests across 5 modules)
 npm test
 
 # Run with coverage reports
@@ -53,9 +54,11 @@ npm test -- tests/tools/patterns.test.ts
 npm test -- tests/tools/artifacts.test.ts
 npm test -- tests/tools/memory.test.ts
 npm test -- tests/tools/metrics.test.ts
+npm test -- tests/tools/search.test.ts
 
 # Run single test by name
 npm test -- -t "searchPatterns"
+npm test -- -t "semanticSearch"
 ```
 
 ### Running the Server
@@ -126,9 +129,9 @@ TypeScript strict mode with zero `any` types. Every tool has explicit input/outp
 
 ## High-Level Architecture
 
-### Four-Module Tool System
+### Five-Module Tool System
 
-The server provides **14 MCP tools** organized into 4 functional modules:
+The server provides **17 MCP tools** organized into 5 functional modules:
 
 #### 1. Patterns Module (3 tools)
 Progressive skill loading workflow:
@@ -155,6 +158,14 @@ Context engineering performance measurement:
 - `getCompressionRatio` - Calculate token reduction from finalization
 - `getPatternReuse` - Track how often patterns are reused
 
+#### 5. Search Module (3 tools)
+Semantic search via Google File Search:
+- `semanticSearch` - Query artifacts using semantic understanding (~500-2000 tokens)
+- `indexSession` - Index session to File Search store (~50-100 tokens)
+- `getSearchStats` - Get indexing statistics and costs (~100-200 tokens)
+
+**Key insight:** Semantic search finds conceptually related sessions beyond keyword matching, achieving 99.1% token reduction vs. loading all artifacts.
+
 ### Code Organization
 
 ```
@@ -174,9 +185,13 @@ src/
 │   │   ├── addNote.ts         # Write notes
 │   │   ├── getDecisions.ts    # Read decisions
 │   │   └── getHypotheses.ts   # Read hypotheses
-│   └── metrics/               # Performance tracking
-│       ├── getCompressionRatio.ts
-│       └── getPatternReuse.ts
+│   ├── metrics/               # Performance tracking
+│   │   ├── getCompressionRatio.ts
+│   │   └── getPatternReuse.ts
+│   └── search/                # Semantic search
+│       ├── semanticSearch.ts  # Query with Google File Search
+│       ├── indexSession.ts    # Index to File Search store
+│       └── getSearchStats.ts  # Get indexing statistics
 └── utils/
     ├── filesystem.ts          # Pattern library access (~/.shared-patterns/)
     ├── artifacts.ts           # Finalization pack parsing
@@ -357,6 +372,7 @@ Tests are organized to mirror the tool structure:
 - `tests/tools/artifacts.test.ts` - 19 tests for Artifacts module
 - `tests/tools/memory.test.ts` - 18 tests for Memory module
 - `tests/tools/metrics.test.ts` - 23 tests for Metrics module
+- `tests/tools/search.test.ts` - 75+ tests for Search module
 - `tests/integration/server.test.ts` - End-to-end server tests (planned)
 
 **Test structure pattern:**
@@ -409,6 +425,11 @@ Use these standardized error codes (see [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GU
 **Artifact errors:**
 - `ARTIFACT_NOT_FOUND` - Finalization pack not found
 - `SESSION_NOT_FOUND` - Session doesn't exist
+
+**Search errors:**
+- `SEARCH_ERROR` - Semantic search query failed
+- `INDEX_ERROR` - Session indexing failed
+- `STATS_ERROR` - Failed to retrieve search statistics
 
 **Generic:**
 - `OPERATION_FAILED` - Generic operation failure
@@ -541,5 +562,5 @@ This project has extensive documentation organized by depth and audience. See **
 ---
 
 **Status:** Production Ready (v1.0.0)
-**Tools:** 14 of 14 tools implemented (100%) ✅
-**Test Suite:** 90 passing tests across 4 modules
+**Tools:** 17 of 17 tools implemented (100%) ✅
+**Test Suite:** 165+ passing tests across 5 modules

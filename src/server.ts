@@ -7,6 +7,9 @@
  * - Memory module: addNote, getDecisions, getHypotheses
  * - Metrics module: getCompressionRatio, getPatternReuse
  * - Search module: semanticSearch, indexSession, getSearchStats
+ * - Session module: start_session_coordination, save_session_note, session_search,
+ *                   check_duplicate_work, get_session_stats, extract_session_memories,
+ *                   finalize_session_coordination
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -40,6 +43,15 @@ import { getPatternReuseHandler, getPatternReuseTool } from './tools/metrics/get
 import { semanticSearchHandler, semanticSearchTool } from './tools/search/semanticSearch.js';
 import { indexSessionHandler, indexSessionTool } from './tools/search/indexSession.js';
 import { getSearchStatsHandler, getSearchStatsTool } from './tools/search/getSearchStats.js';
+
+// Import tool handlers - Session module
+import { startSessionCoordinationHandler, startSessionCoordinationTool } from './tools/session/startSessionCoordination.js';
+import { saveSessionNoteHandler, saveSessionNoteTool } from './tools/session/saveSessionNote.js';
+import { sessionSearchHandler, sessionSearchTool } from './tools/session/sessionSearch.js';
+import { checkDuplicateWorkHandler, checkDuplicateWorkTool } from './tools/session/checkDuplicateWork.js';
+import { getSessionStatsHandler, getSessionStatsTool } from './tools/session/getSessionStats.js';
+import { extractSessionMemoriesHandler, extractSessionMemoriesTool } from './tools/session/extractSessionMemories.js';
+import { finalizeSessionCoordinationHandler, finalizeSessionCoordinationTool } from './tools/session/finalizeSessionCoordination.js';
 
 /**
  * Creates and configures the MCP server
@@ -82,6 +94,15 @@ export function createServer(): Server {
     semanticSearchTool,
     indexSessionTool,
     getSearchStatsTool,
+
+    // Session module (7 tools)
+    startSessionCoordinationTool,
+    saveSessionNoteTool,
+    sessionSearchTool,
+    checkDuplicateWorkTool,
+    getSessionStatsTool,
+    extractSessionMemoriesTool,
+    finalizeSessionCoordinationTool,
   ];
 
   // Handle tool listing
@@ -141,6 +162,28 @@ export function createServer(): Server {
 
         case 'getSearchStats':
           return await getSearchStatsHandler(args);
+
+        // Session module
+        case 'start_session_coordination':
+          return await startSessionCoordinationHandler(args);
+
+        case 'save_session_note':
+          return await saveSessionNoteHandler(args);
+
+        case 'session_search':
+          return await sessionSearchHandler(args);
+
+        case 'check_duplicate_work':
+          return await checkDuplicateWorkHandler(args);
+
+        case 'get_session_stats':
+          return await getSessionStatsHandler(args);
+
+        case 'extract_session_memories':
+          return await extractSessionMemoriesHandler(args);
+
+        case 'finalize_session_coordination':
+          return await finalizeSessionCoordinationHandler(args);
 
         default:
           throw new Error(`Unknown tool: ${name}`);
