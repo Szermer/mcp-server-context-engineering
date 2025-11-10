@@ -1,202 +1,209 @@
 /**
  * Tests for Patterns Module
  *
- * Tests the three patterns tools: searchPatterns, loadSkill, executeSkill
+ * Tests the patterns tools and utilities with real data from ~/.shared-patterns
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import * as fs from 'fs/promises';
+import { describe, it, expect } from 'vitest';
 import * as path from 'path';
 import { homedir } from 'os';
 
-// Note: We're testing the compiled JavaScript, not TypeScript directly
-// Make sure to run `npm run build` before running tests
+describe('Patterns Module - Filesystem Utilities', () => {
+  describe('getSharedPatternsPath', () => {
+    it('should return the shared patterns directory path', async () => {
+      const { getSharedPatternsPath } = await import('../../dist/utils/filesystem.js');
+      const patternsPath = getSharedPatternsPath();
 
-describe('Patterns Module', () => {
-  const patternsDir = path.join(homedir(), '.shared-patterns', 'mcp-integration');
-
-  describe('searchPatterns', () => {
-    it('should be defined', () => {
-      // Basic smoke test to ensure the module structure is correct
-      expect(true).toBe(true);
-    });
-
-    it('should search for patterns by category', async () => {
-      // TODO: Implement test with mock data
-      // This test requires the actual pattern library to exist
-      expect(true).toBe(true);
-    });
-
-    it('should filter by keyword', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-
-    it('should filter by includeExecutable', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-
-    it('should respect limit parameter', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-
-    it('should return patterns sorted by quality', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-
-    it('should estimate token usage', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
+      expect(patternsPath).toBeDefined();
+      expect(patternsPath).toContain('.shared-patterns');
+      expect(patternsPath).toBe(path.join(homedir(), '.shared-patterns'));
     });
   });
 
-  describe('loadSkill', () => {
-    it('should load skill by ID', async () => {
-      // TODO: Implement test with mock data
-      expect(true).toBe(true);
-    });
+  describe('getPatternCategories', () => {
+    it('should list all pattern categories', async () => {
+      const { getPatternCategories } = await import('../../dist/utils/filesystem.js');
+      const categories = await getPatternCategories();
 
-    it('should validate skillId format', async () => {
-      // TODO: Test that invalid skillId throws error
-      expect(true).toBe(true);
-    });
+      expect(Array.isArray(categories)).toBe(true);
+      expect(categories.length).toBeGreaterThan(0);
 
-    it('should load documentation', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-
-    it('should optionally include metadata', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-
-    it('should optionally include code', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-
-    it('should handle missing skills', async () => {
-      // TODO: Test error handling
-      expect(true).toBe(true);
+      // Should include known categories from the pattern library
+      expect(categories).toContain('mcp-integration');
     });
   });
 
-  describe('executeSkill', () => {
-    it('should execute skill with valid input', async () => {
-      // TODO: Implement test with mock skill
-      expect(true).toBe(true);
+  describe('searchPatternsInCategory', () => {
+    it('should find patterns in mcp-integration category', async () => {
+      const { searchPatternsInCategory } = await import('../../dist/utils/filesystem.js');
+      const patterns = await searchPatternsInCategory('mcp-integration');
+
+      expect(Array.isArray(patterns)).toBe(true);
+      expect(patterns.length).toBeGreaterThan(0);
+
+      // Each pattern should have required fields
+      patterns.forEach(pattern => {
+        expect(pattern.id).toBeDefined();
+        expect(pattern.name).toBeDefined();
+        expect(pattern.category).toBe('mcp-integration');
+        expect(pattern.path).toBeDefined();
+        expect(pattern.description).toBeDefined();
+        expect(typeof pattern.hasExecutable).toBe('boolean');
+      });
     });
 
-    it('should validate skillId format', async () => {
-      // TODO: Test validation
-      expect(true).toBe(true);
+    it('should filter patterns by keyword', async () => {
+      const { searchPatternsInCategory } = await import('../../dist/utils/filesystem.js');
+      const patterns = await searchPatternsInCategory('mcp-integration', 'RLS');
+
+      expect(Array.isArray(patterns)).toBe(true);
+
+      // Should find the rls-policy-generator pattern
+      const rlsPattern = patterns.find(p => p.name.toLowerCase().includes('rls'));
+      expect(rlsPattern).toBeDefined();
+
+      if (rlsPattern) {
+        expect(rlsPattern.category).toBe('mcp-integration');
+        expect(rlsPattern.hasExecutable).toBe(true);
+      }
     });
 
-    it('should support dry run mode', async () => {
-      // TODO: Test dry run
-      expect(true).toBe(true);
+    it('should filter by executable flag', async () => {
+      const { searchPatternsInCategory } = await import('../../dist/utils/filesystem.js');
+      const executableOnly = await searchPatternsInCategory('mcp-integration', undefined, true);
+
+      expect(Array.isArray(executableOnly)).toBe(true);
+
+      // All returned patterns should have executable implementations
+      executableOnly.forEach(pattern => {
+        expect(pattern.hasExecutable).toBe(true);
+      });
     });
 
-    it('should handle execution errors gracefully', async () => {
-      // TODO: Test error handling
-      expect(true).toBe(true);
-    });
+    it('should extract quality scores from SKILL files', async () => {
+      const { searchPatternsInCategory } = await import('../../dist/utils/filesystem.js');
+      const patterns = await searchPatternsInCategory('mcp-integration');
 
-    it('should track execution duration', async () => {
-      // TODO: Test performance tracking
-      expect(true).toBe(true);
-    });
+      // Find patterns with quality scores
+      const patternsWithQuality = patterns.filter(p => p.quality !== undefined);
 
-    it('should estimate token usage', async () => {
-      // TODO: Test token estimation
-      expect(true).toBe(true);
+      expect(patternsWithQuality.length).toBeGreaterThan(0);
+
+      patternsWithQuality.forEach(pattern => {
+        expect(pattern.quality).toBeDefined();
+        expect(typeof pattern.quality).toBe('number');
+        expect(pattern.quality!).toBeGreaterThanOrEqual(0);
+        expect(pattern.quality!).toBeLessThanOrEqual(100);
+      });
     });
   });
 });
 
-describe('Utility Functions', () => {
-  describe('tokenEstimator', () => {
-    it('should estimate tokens from text', () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
+describe('Patterns Module - Tool Handlers', () => {
+  describe('searchPatternsHandler', () => {
+    it('should handle search with category filter', async () => {
+      const { searchPatternsHandler } = await import('../../dist/tools/patterns/searchPatterns.js');
+
+      const response = await searchPatternsHandler({
+        category: 'mcp-integration',
+      });
+
+      expect(response.content).toBeDefined();
+      expect(Array.isArray(response.content)).toBe(true);
+      expect(response.content.length).toBeGreaterThan(0);
+
+      const result = JSON.parse(response.content[0].text);
+      expect(result.success).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBeGreaterThan(0);
+      expect(result.metadata.tokensUsed).toBeGreaterThan(0);
+      expect(result.metadata.resultsCount).toBe(result.data.length);
     });
 
-    it('should estimate tokens from JSON', () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
+    it('should handle search with keyword', async () => {
+      const { searchPatternsHandler } = await import('../../dist/tools/patterns/searchPatterns.js');
+
+      const response = await searchPatternsHandler({
+        category: 'mcp-integration',
+        keyword: 'progressive',
+      });
+
+      const result = JSON.parse(response.content[0].text);
+      expect(result.success).toBe(true);
+
+      // Should find progressive-tool-discovery pattern
+      const progressivePattern = result.data.find((p: any) => p.name.includes('progressive'));
+      expect(progressivePattern).toBeDefined();
     });
 
-    it('should format token counts', () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
-  });
+    it('should handle search with limit', async () => {
+      const { searchPatternsHandler } = await import('../../dist/tools/patterns/searchPatterns.js');
 
-  describe('filesystem', () => {
-    it('should get shared patterns path', () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
+      const response = await searchPatternsHandler({
+        category: 'mcp-integration',
+        limit: 1,
+      });
 
-    it('should list pattern categories', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
+      const result = JSON.parse(response.content[0].text);
+      expect(result.success).toBe(true);
+      expect(result.data.length).toBeLessThanOrEqual(1);
+      expect(result.metadata.resultsCount).toBeLessThanOrEqual(1);
     });
 
-    it('should search patterns in category', async () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
+    it('should estimate token usage accurately', async () => {
+      const { searchPatternsHandler } = await import('../../dist/tools/patterns/searchPatterns.js');
+
+      const response = await searchPatternsHandler({
+        category: 'mcp-integration',
+      });
+
+      const result = JSON.parse(response.content[0].text);
+      expect(result.success).toBe(true);
+      expect(result.metadata.tokensUsed).toBeGreaterThan(0);
+      // Token count should be reasonable for metadata (not full content)
+      expect(result.metadata.tokensUsed).toBeLessThan(10000);
     });
 
-    it('should extract quality scores', () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
-    });
+    it('should handle errors gracefully', async () => {
+      const { searchPatternsHandler } = await import('../../dist/tools/patterns/searchPatterns.js');
 
-    it('should extract descriptions', () => {
-      // TODO: Implement test
-      expect(true).toBe(true);
+      const response = await searchPatternsHandler({
+        category: 'nonexistent-category-xyz',
+      });
+
+      const result = JSON.parse(response.content[0].text);
+      // Should still succeed but return empty results
+      expect(result.success).toBe(true);
+      expect(result.data.length).toBe(0);
     });
   });
 });
 
-/**
- * Integration tests
- *
- * These tests require:
- * 1. The server to be built (npm run build)
- * 2. Pattern library to exist at ~/.shared-patterns/
- * 3. At least one executable skill (e.g., rls-policy-generator)
- */
-describe('Integration Tests', () => {
-  beforeAll(async () => {
-    // Check if pattern library exists
-    try {
-      await fs.access(patternsDir);
-    } catch {
-      console.warn('Pattern library not found. Integration tests will be skipped.');
-    }
-  });
+describe('Integration Test - End-to-End Pattern Discovery', () => {
+  it('should complete full pattern discovery workflow', async () => {
+    const { searchPatternsHandler } = await import('../../dist/tools/patterns/searchPatterns.js');
 
-  it('should complete end-to-end skill discovery and execution', async () => {
-    // TODO: Implement full workflow test:
-    // 1. searchPatterns for "RLS"
-    // 2. loadSkill for found pattern
-    // 3. executeSkill with test input
-    expect(true).toBe(true);
-  });
+    // Step 1: Search for RLS-related patterns
+    const searchResponse = await searchPatternsHandler({
+      category: 'mcp-integration',
+      keyword: 'RLS',
+      includeExecutable: true,
+    });
 
-  it('should measure token savings', async () => {
-    // TODO: Measure actual token usage vs. loading all tools
-    expect(true).toBe(true);
-  });
+    const searchResult = JSON.parse(searchResponse.content[0].text);
+    expect(searchResult.success).toBe(true);
+    expect(searchResult.data.length).toBeGreaterThan(0);
 
-  it('should handle non-existent patterns gracefully', async () => {
-    // TODO: Test error cases
-    expect(true).toBe(true);
+    // Step 2: Verify we found the RLS policy generator
+    const rlsGenerator = searchResult.data.find((p: any) =>
+      p.name.includes('rls-policy-generator')
+    );
+    expect(rlsGenerator).toBeDefined();
+    expect(rlsGenerator.hasExecutable).toBe(true);
+    expect(rlsGenerator.category).toBe('mcp-integration');
+
+    // Step 3: Verify token savings
+    // Should be much less than loading full skill content
+    expect(searchResult.metadata.tokensUsed).toBeLessThan(1000);
   });
 });

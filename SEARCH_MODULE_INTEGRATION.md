@@ -449,10 +449,10 @@ npm run test:integration
     "context-engineering": {
       "command": "node",
       "args": [
-        "/Users/stephenszermer/Dev/mcp-server-context-engineering/dist/index.js"
+        "/Users/<username>/Dev/mcp-server-context-engineering/dist/index.js"
       ],
       "env": {
-        "GEMINI_API_KEY": "AIzaSy..."
+        "GEMINI_API_KEY": "your-api-key-here"
       }
     }
   }

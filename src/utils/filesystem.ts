@@ -127,7 +127,8 @@ async function fileExists(filePath: string): Promise<boolean> {
  * Extract quality score from SKILL.md content
  */
 function extractQualityScore(content: string): number | undefined {
-  const match = content.match(/\*\*Overall Score:\*\*\s*(\d+(?:\.\d+)?)/i);
+  // Match "**Quality Score:** 8.5/10" format
+  const match = content.match(/\*\*Quality Score:\*\*\s*(\d+(?:\.\d+)?)(?:\/10)?/i);
   if (match && match[1]) {
     return parseFloat(match[1]);
   }

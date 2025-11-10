@@ -13,6 +13,7 @@ This is an **MCP (Model Context Protocol) server** that exposes context engineer
 - **Testing**: Vitest with 165+ passing tests
 - **Transport**: stdio (standard input/output)
 - **Search**: Google File Search API (Gemini) for semantic artifact search
+- **Session Coordination**: Qdrant Cloud + OpenAI for real-time session memory
 
 **Documentation:**
 - **[CLAUDE.md](./CLAUDE.md)** (this file) - Quick reference for Claude Code
@@ -40,7 +41,7 @@ npm run clean
 
 ### Testing
 ```bash
-# Run all tests (165+ tests across 5 modules)
+# Run all tests (165+ tests across 6 modules)
 npm test
 
 # Run with coverage reports
@@ -59,6 +60,7 @@ npm test -- tests/tools/search.test.ts
 # Run single test by name
 npm test -- -t "searchPatterns"
 npm test -- -t "semanticSearch"
+npm test -- -t "startSessionCoordination"
 ```
 
 ### Running the Server
@@ -71,6 +73,22 @@ npm run dev
 ```
 
 The server communicates via stdio and should be configured in Claude Code's MCP settings (`~/.config/claude/claude_desktop_config.json`).
+
+### Environment Variables
+
+Required for specific modules:
+
+```bash
+# Search Module (Google File Search)
+GEMINI_API_KEY=your-gemini-api-key
+
+# Session Module (Qdrant + OpenAI)
+QDRANT_URL=https://your-cluster.qdrant.io
+QDRANT_API_KEY=your-qdrant-api-key
+OPENAI_API_KEY=your-openai-api-key
+```
+
+**Note:** Only the modules you use require their respective API keys. Patterns, Artifacts, Memory, and Metrics modules work without any API keys.
 
 ## Core Architectural Principles
 
@@ -129,9 +147,9 @@ TypeScript strict mode with zero `any` types. Every tool has explicit input/outp
 
 ## High-Level Architecture
 
-### Five-Module Tool System
+### Six-Module Tool System
 
-The server provides **17 MCP tools** organized into 5 functional modules:
+The server provides **24 MCP tools** organized into 6 functional modules:
 
 #### 1. Patterns Module (3 tools)
 Progressive skill loading workflow:
@@ -166,6 +184,18 @@ Semantic search via Google File Search:
 
 **Key insight:** Semantic search finds conceptually related sessions beyond keyword matching, achieving 99.1% token reduction vs. loading all artifacts.
 
+#### 6. Session Module (7 tools)
+Real-time session coordination using Qdrant Cloud + OpenAI:
+- `start_session_coordination` - Initialize Qdrant session memory (~100 tokens)
+- `save_session_note` - Save decision/hypothesis/blocker (~50-100 tokens)
+- `session_search` - Fast semantic search within session (~200-500 tokens)
+- `check_duplicate_work` - Detect duplicate implementations (~300-800 tokens)
+- `get_session_stats` - Get session statistics (~100-200 tokens)
+- `extract_session_memories` - Extract key learnings (~500-1500 tokens)
+- `finalize_session_coordination` - Cleanup and archive (~100 tokens)
+
+**Key insight:** Ephemeral in-memory session coordination enables sub-200ms semantic search and duplicate detection during active development, automatically cleaned up on finalization.
+
 ### Code Organization
 
 ```
@@ -188,16 +218,25 @@ src/
 │   ├── metrics/               # Performance tracking
 │   │   ├── getCompressionRatio.ts
 │   │   └── getPatternReuse.ts
-│   └── search/                # Semantic search
-│       ├── semanticSearch.ts  # Query with Google File Search
-│       ├── indexSession.ts    # Index to File Search store
-│       └── getSearchStats.ts  # Get indexing statistics
+│   ├── search/                # Semantic search
+│   │   ├── semanticSearch.ts  # Query with Google File Search
+│   │   ├── indexSession.ts    # Index to File Search store
+│   │   └── getSearchStats.ts  # Get indexing statistics
+│   └── session/               # Real-time coordination
+│       ├── startSessionCoordination.ts       # Initialize Qdrant memory
+│       ├── saveSessionNote.ts                # Save notes
+│       ├── sessionSearch.ts                  # Semantic search
+│       ├── checkDuplicateWork.ts             # Detect duplicates
+│       ├── getSessionStats.ts                # Session statistics
+│       ├── extractSessionMemories.ts         # Extract learnings
+│       └── finalizeSessionCoordination.ts    # Cleanup
 └── utils/
     ├── filesystem.ts          # Pattern library access (~/.shared-patterns/)
     ├── artifacts.ts           # Finalization pack parsing
     ├── memory.ts              # Session memory management
     ├── metrics.ts             # Compression calculations
-    └── tokenEstimator.ts      # Token usage estimation
+    ├── tokenEstimator.ts      # Token usage estimation
+    └── SessionCoordinator.ts  # Qdrant session coordination
 ```
 
 ### Tool Implementation Pattern
@@ -265,7 +304,7 @@ Tools are registered in `src/server.ts` (import, add to tools array, add handler
 
 **Quick workflow** (see [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md#adding-a-new-tool) for detailed guide):
 
-1. **Choose module** - patterns/, artifacts/, memory/, or metrics/
+1. **Choose module** - patterns/, artifacts/, memory/, metrics/, search/, or session/
 2. **Create tool file** - `src/tools/{module}/{toolName}.ts`
 3. **Implement pattern** - Follow structure above (Tool definition → Interfaces → Handler → Core logic)
 4. **Register in server** - Edit `src/server.ts`:
@@ -430,6 +469,13 @@ Use these standardized error codes (see [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GU
 - `SEARCH_ERROR` - Semantic search query failed
 - `INDEX_ERROR` - Session indexing failed
 - `STATS_ERROR` - Failed to retrieve search statistics
+
+**Session errors:**
+- `SESSION_INIT_ERROR` - Failed to initialize Qdrant session
+- `SESSION_SAVE_ERROR` - Failed to save note to session
+- `SESSION_SEARCH_ERROR` - Session search failed
+- `DUPLICATE_CHECK_ERROR` - Duplicate detection failed
+- `SESSION_CLEANUP_ERROR` - Failed to cleanup session
 
 **Generic:**
 - `OPERATION_FAILED` - Generic operation failure
