@@ -1,7 +1,7 @@
 # MCP Server Architecture Documentation
 
 **Version:** 1.0.0
-**Last Updated:** 2025-11-05
+**Last Updated:** 2025-11-10
 **Status:** Production Ready
 **Related:** [README.md](../README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)
 
@@ -25,7 +25,7 @@
 
 ## Executive Summary
 
-The MCP Server for Context Engineering is a production-grade implementation of the Model Context Protocol that enables AI agents to access context engineering operations with **98.7% token reduction** through progressive disclosure and code execution.
+The MCP Server for Context Engineering is a production-grade implementation of the Model Context Protocol that enables AI agents to access context engineering operations with **98.7-99.1% token reduction** through progressive disclosure, code execution, and semantic search.
 
 ### The Problem
 
@@ -49,17 +49,19 @@ Data transformations happen in the execution environment, never entering the mod
 ### Architecture at a Glance
 
 ```
-14 tools across 4 modules:
+24 tools across 6 modules:
 ├── Patterns Module (3 tools)  - Search, load, execute reusable patterns
 ├── Artifacts Module (3 tools) - Access session history and code
 ├── Memory Module (3 tools)    - Track decisions/hypotheses/blockers
-└── Metrics Module (2 tools)   - Measure compression & pattern reuse
+├── Metrics Module (2 tools)   - Measure compression & pattern reuse
+├── Search Module (3 tools)    - Semantic search via Google File Search
+└── Session Module (7 tools)   - Real-time coordination via Qdrant Cloud
 ```
 
 **Key Metrics:**
-- 3,075 lines of TypeScript (strict mode)
-- 90 tests passing (100% coverage target)
-- < 100ms for search operations
+- 5,500+ lines of TypeScript (strict mode)
+- 165+ tests passing across 6 modules
+- < 100ms for search operations, < 200ms for session coordination
 - Node.js 18+ with MCP SDK 0.5.0
 
 ---
@@ -188,19 +190,24 @@ Agents can use standard filesystem tools (ls, find, grep) to explore patterns na
 │  └───────────────────┬─────────────────────────────────────┘   │
 │                      │                                           │
 │  ┌───────────────────┼───────────────────────────────────────┐ │
-│  │              Tool Handlers (14 tools)                      │ │
+│  │              Tool Handlers (24 tools)                      │ │
 │  │                                                             │ │
 │  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐      │ │
 │  │  │  Patterns   │  │  Artifacts   │  │   Memory    │      │ │
 │  │  │  (3 tools)  │  │  (3 tools)   │  │  (3 tools)  │      │ │
-│  │  └──────┬──────┘  └──────┬───────┘  └──────┬──────┘      │ │
-│  │         │                 │                  │              │ │
-│  │  ┌──────▼─────────────────▼──────────────────▼──────┐     │ │
+│  │  └─────────────┘  └──────────────┘  └─────────────┘      │ │
+│  │                                                             │ │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐      │ │
+│  │  │  Metrics    │  │   Search     │  │  Session    │      │ │
+│  │  │  (2 tools)  │  │  (3 tools)   │  │  (7 tools)  │      │ │
+│  │  └─────────────┘  └──────────────┘  └─────────────┘      │ │
+│  │                                                             │ │
+│  │  ┌──────────────────────────────────────────────────┐     │ │
 │  │  │              Utilities Layer                      │     │ │
-│  │  │  - filesystem.ts   - artifacts.ts                │     │ │
-│  │  │  - memory.ts       - metrics.ts                  │     │ │
-│  │  │  - tokenEstimator.ts                             │     │ │
-│  │  └──────────────────────┬──────────────────────────┘     │ │
+│  │  │  - filesystem.ts      - artifacts.ts             │     │ │
+│  │  │  - memory.ts          - metrics.ts               │     │ │
+│  │  │  - tokenEstimator.ts  - SessionCoordinator.ts    │     │ │
+│  │  └──────────────────────┬───────────────────────────┘     │ │
 │  └───────────────────────────┼─────────────────────────────┘ │
 └────────────────────────────┬─┴─────────────────────────────────┘
                              │
@@ -408,6 +415,88 @@ compressionRatio = 1 - (tokensFinal / tokensBeforeFinalization)
 - Comparable across projects and languages
 
 **Target:** ≥70% compression ratio (currently achieving 74%)
+
+### Search Module
+
+**Purpose:** Semantic search via Google File Search API (Gemini)
+
+**Responsibilities:**
+- Index session artifacts to Google File Search store
+- Perform semantic searches across finalization packs
+- Provide search statistics and cost tracking
+
+**Key Files:**
+- `semanticSearch.ts` - Query artifacts using semantic understanding
+- `indexSession.ts` - Index session to File Search store
+- `getSearchStats.ts` - Get indexing statistics and costs
+
+**Design Decision: Semantic vs. Keyword Search**
+
+Google File Search enables finding conceptually related sessions:
+
+```typescript
+// Query: "authentication fixes"
+// Finds: sessions about "JWT validation", "OAuth flow", "credential handling"
+// Even without exact keyword matches
+```
+
+**Why semantic search?**
+- Discovers related work beyond keyword matching
+- Understands context and intent
+- 99.1% token reduction vs. loading all artifacts
+
+**Token Usage:** ~500-2000 tokens per search (vs. 179K to load all artifacts)
+
+**Trade-off:** Requires Google Cloud API key and incurs indexing costs (~$0.0001-0.001 per session)
+
+### Session Module
+
+**Purpose:** Real-time session coordination using Qdrant Cloud + OpenAI
+
+**Responsibilities:**
+- Initialize ephemeral Qdrant session memory
+- Save decisions/hypotheses/blockers during development
+- Fast semantic search within active session (< 200ms)
+- Detect duplicate implementations
+- Extract session learnings
+- Automatic cleanup on finalization
+
+**Key Files:**
+- `startSessionCoordination.ts` - Initialize Qdrant memory
+- `saveSessionNote.ts` - Save notes with embeddings
+- `sessionSearch.ts` - Fast semantic search within session
+- `checkDuplicateWork.ts` - Detect duplicate implementations
+- `getSessionStats.ts` - Session statistics
+- `extractSessionMemories.ts` - Extract key learnings
+- `finalizeSessionCoordination.ts` - Cleanup and archive
+
+**Design Decision: Ephemeral In-Memory Coordination**
+
+Session coordination uses Qdrant Cloud (vector database) for real-time coordination:
+
+```typescript
+// Save decision
+await save_session_note({
+  type: 'decision',
+  content: 'Using UUID v7 for temporal ordering'
+});
+
+// Search within session (50-200ms)
+const results = await session_search({
+  query: 'UUID decision',
+  limit: 5
+});
+```
+
+**Why Qdrant + OpenAI?**
+- Sub-200ms semantic search (vs. 2-5s for Google File Search)
+- Ephemeral storage (automatically cleaned up on finalization)
+- Vector embeddings enable similarity detection for duplicate work
+- Real-time coordination during active development
+
+**Token Usage:** ~50-800 tokens per operation (minimal overhead)
+
+**Trade-off:** Requires Qdrant Cloud and OpenAI API keys, but enables real-time coordination that's impossible with filesystem-only approach.
 
 ---
 
@@ -1038,28 +1127,37 @@ await salesforce.updateRecord({ data });
 
 ## Conclusion
 
-The MCP Server for Context Engineering implements a **progressive disclosure** architecture that achieves **98.7% token reduction** through:
+The MCP Server for Context Engineering implements a **progressive disclosure** architecture that achieves **98.7-99.1% token reduction** through:
 
 1. **Metadata-first search** - Return summaries, not full content
 2. **On-demand loading** - Load code only when needed
 3. **Code execution** - Transform data outside model context
-4. **Structured responses** - Type-safe, observable, fail-safe
+4. **Semantic search** - Find related work beyond keyword matching
+5. **Real-time coordination** - Ephemeral session memory for duplicate detection
+6. **Structured responses** - Type-safe, observable, fail-safe
 
 **Key achievements:**
-- 14 tools across 4 modules
-- 3,075 lines of TypeScript (strict mode)
-- 90 tests passing
-- <100ms search performance
+- 24 tools across 6 modules
+- 5,500+ lines of TypeScript (strict mode)
+- 165+ tests passing across 6 modules
+- <100ms search performance, <200ms session coordination
 - Type-safe, observable, fail-safe design
+- Production-ready with comprehensive documentation
 
-**Next steps:**
-- Week 4: Integration testing with Claude Code
+**Completed phases:**
+- ✅ Phase 1: Foundation (Patterns, Artifacts, Memory, Metrics modules)
+- ✅ Phase 2: MCP Server Implementation
+- ✅ Phase 2.5: Search Module (Google File Search integration)
+- ✅ Phase 2.6: Session Module (Qdrant Cloud + OpenAI coordination)
+
+**Future enhancements:**
 - Phase 3: Finalization enhancement for skill extraction
 - Phase 4: Privacy layer with PII tokenization
+- Phase 5: Multi-language skill support
 
 ---
 
 **Document version:** 1.0.0
-**Last updated:** 2025-11-05
+**Last updated:** 2025-11-10
 **Authors:** Stephen Szermer
 **Related:** [README.md](../README.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md)

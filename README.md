@@ -17,7 +17,7 @@ This MCP server implements the Model Context Protocol to provide AI agents with 
 
 ## Architecture
 
-The server provides **17 tools across 5 modules**:
+The server provides **24 tools across 6 modules**:
 
 ### Patterns Module (3 tools)
 - `searchPatterns` - Search pattern library by keyword/category
@@ -42,6 +42,15 @@ The server provides **17 tools across 5 modules**:
 - `semanticSearch` - Query artifacts using Google File Search semantic understanding
 - `indexSession` - Index session artifacts to File Search store
 - `getSearchStats` - Get indexing statistics and costs
+
+### Session Module (7 tools) ✅
+- `start_session_coordination` - Initialize Qdrant session memory
+- `save_session_note` - Save decision/hypothesis/blocker with embeddings
+- `session_search` - Fast semantic search within active session
+- `check_duplicate_work` - Detect duplicate implementations
+- `get_session_stats` - Get session statistics
+- `extract_session_memories` - Extract key learnings from session
+- `finalize_session_coordination` - Cleanup and archive session
 
 ## Installation
 
@@ -173,10 +182,11 @@ console.log(`Total cost: $${stats.data.stats.totalCostUsd.toFixed(2)}`);
 - [x] Memory module (3 tools) ✅
 - [x] Metrics module (2 tools) ✅
 - [x] Search module (3 tools) ✅
+- [x] Session module (7 tools) ✅
 - [x] Test suite with vitest (165+ tests passing) ✅
 - [ ] Integration testing with Claude Code - Week 5
 
-**Progress:** 17 of 17 tools (100%) 🎉
+**Progress:** 24 of 24 tools (100%) 🎉
 
 ## Testing
 

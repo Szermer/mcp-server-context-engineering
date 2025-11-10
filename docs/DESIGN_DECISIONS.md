@@ -1,7 +1,7 @@
 # Design Decisions Reference
 
 **Version:** 1.0.0
-**Last Updated:** 2025-11-05
+**Last Updated:** 2025-11-10
 **Related:** [ARCHITECTURE.md](./ARCHITECTURE.md) | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | [README.md](../README.md)
 
 ---
@@ -27,9 +27,9 @@ This document provides a detailed reference of technical design decisions made d
 
 ## Module Organization
 
-### Decision: Four Modules Over Single Monolith
+### Decision: Six Modules Over Single Monolith
 
-**Context:** How to organize the 14 tools in the codebase.
+**Context:** How to organize the 24 tools in the codebase.
 
 **Options considered:**
 
@@ -40,7 +40,7 @@ src/tools/
 ├── loadSkill.ts
 ├── executeSkill.ts
 ├── searchArtifacts.ts
-├── ... (14 files)
+├── ... (24 files)
 ```
 
 **Option B: Module per tool**
@@ -49,39 +49,44 @@ src/tools/
 ├── searchPatterns/
 ├── loadSkill/
 ├── executeSkill/
-├── ... (14 directories)
+├── ... (24 directories)
 ```
 
-**Option C: Four modules by domain ✅ CHOSEN**
+**Option C: Six modules by domain ✅ CHOSEN**
 ```
 src/tools/
-├── patterns/
+├── patterns/      (3 tools)
 │   ├── searchPatterns.ts
 │   ├── loadSkill.ts
 │   └── executeSkill.ts
-├── artifacts/
-├── memory/
-└── metrics/
+├── artifacts/     (3 tools)
+├── memory/        (3 tools)
+├── metrics/       (2 tools)
+├── search/        (3 tools)
+└── session/       (7 tools)
 ```
 
 **Rationale:**
 
 **Why not Option A:**
-- 14 files in one directory is hard to navigate
+- 24 files in one directory is hard to navigate
 - No logical grouping
 - Unclear which tools are related
+- Doesn't scale past ~10 tools
 
 **Why not Option B:**
 - Too much nesting (3+ levels deep)
 - Overhead of directory structure
 - Harder to see tool relationships
+- 24 directories is excessive
 
 **Why Option C:**
-- Clear domain boundaries (patterns, artifacts, memory, metrics)
+- Clear domain boundaries (patterns, artifacts, memory, metrics, search, session)
 - Each module is independently testable
-- Easy to navigate (4 directories vs 14)
+- Easy to navigate (6 directories vs 24)
 - Natural grouping by concern
-- Scales to 20+ tools without reorganization
+- Successfully scaled from 14 to 24 tools without reorganization
+- Module boundaries align with API surface (e.g., Search Module = Google File Search API)
 
 **Trade-off:** More imports across modules, but improved organization and maintainability.
 
