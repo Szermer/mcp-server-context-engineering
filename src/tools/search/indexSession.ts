@@ -172,12 +172,17 @@ async function indexSession(input: IndexSessionInput): Promise<IndexSessionOutpu
 
     const finalization = JSON.parse(finalizationContent);
 
-    // Extract metadata
-    const customMetadata = {
-      session_id: input.sessionId,
-      session_type: finalization.summary?.sessionType || 'development',
-      impact: finalization.summary?.impact || 'medium',
-    };
+    // Extract metadata - Google File Search expects CustomMetadata[] format
+    const customMetadata = [
+      { key: 'session_id', stringValue: input.sessionId },
+      { key: 'session_type', stringValue: finalization.summary?.sessionType || 'development' },
+      {
+        key: 'impact',
+        stringValue: typeof finalization.summary?.impact === 'object'
+          ? JSON.stringify(finalization.summary.impact)
+          : finalization.summary?.impact || 'medium'
+      },
+    ];
 
     let filesIndexed = 0;
     let tokensIndexed = 0;
@@ -188,7 +193,7 @@ async function indexSession(input: IndexSessionInput): Promise<IndexSessionOutpu
       fileSearchStoreName: store.name,
       config: {
         displayName: `${input.sessionId}-finalization-pack.json`,
-        customMetadata: customMetadata as any,
+        customMetadata: customMetadata,
         mimeType: 'application/json',
       },
     });
@@ -207,7 +212,7 @@ async function indexSession(input: IndexSessionInput): Promise<IndexSessionOutpu
       fileSearchStoreName: store.name,
       config: {
         displayName: `${input.sessionId}-session-summary.md`,
-        customMetadata: customMetadata as any,
+        customMetadata: customMetadata,
         mimeType: 'text/markdown',
       },
     });

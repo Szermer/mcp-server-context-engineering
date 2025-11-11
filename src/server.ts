@@ -11,6 +11,7 @@
  *                   check_duplicate_work, get_session_stats, extract_session_memories,
  *                   finalize_session_coordination, track_constraint, get_constraints,
  *                   lift_constraint, check_constraint_violation
+ * - Stuck module: check_stuck_pattern, get_recovery_suggestions
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -25,6 +26,9 @@ import {
 import { searchPatternsHandler, searchPatternsTool } from './tools/patterns/searchPatterns.js';
 import { loadSkillHandler, loadSkillTool } from './tools/patterns/loadSkill.js';
 import { executeSkillHandler, executeSkillTool } from './tools/patterns/executeSkill.js';
+import { findPatternsHandler, findPatternsTool } from './tools/patterns/findPatterns.js';
+import { trackPatternUsageHandler, trackPatternUsageTool } from './tools/patterns/trackPatternUsage.js';
+import { indexPatternLibraryHandler, indexPatternLibraryTool } from './tools/patterns/indexPatternLibrary.js';
 
 // Import tool handlers - Artifacts module
 import { searchArtifactsHandler, searchArtifactsTool } from './tools/artifacts/searchArtifacts.js';
@@ -58,6 +62,10 @@ import { getConstraintsHandler, getConstraintsTool } from './tools/session/getCo
 import { liftConstraintHandler, liftConstraintTool } from './tools/session/liftConstraint.js';
 import { checkConstraintViolationHandler, checkConstraintViolationTool } from './tools/session/checkConstraintViolation.js';
 
+// Import tool handlers - Stuck module
+import { checkStuckPatternHandler, checkStuckPatternTool } from './tools/stuck/checkStuckPattern.js';
+import { getRecoverySuggestionsHandler, getRecoverySuggestionsTool } from './tools/stuck/getRecoverySuggestions.js';
+
 /**
  * Creates and configures the MCP server
  */
@@ -76,10 +84,13 @@ export function createServer(): Server {
 
   // Register all available tools
   const tools: Tool[] = [
-    // Patterns module (3 tools)
+    // Patterns module (6 tools)
     searchPatternsTool,
     loadSkillTool,
     executeSkillTool,
+    findPatternsTool,
+    trackPatternUsageTool,
+    indexPatternLibraryTool,
 
     // Artifacts module (3 tools)
     searchArtifactsTool,
@@ -112,6 +123,10 @@ export function createServer(): Server {
     getConstraintsTool,
     liftConstraintTool,
     checkConstraintViolationTool,
+
+    // Stuck module (2 tools)
+    checkStuckPatternTool,
+    getRecoverySuggestionsTool,
   ];
 
   // Handle tool listing
@@ -134,6 +149,15 @@ export function createServer(): Server {
 
         case 'executeSkill':
           return await executeSkillHandler(args);
+
+        case 'findPatterns':
+          return await findPatternsHandler(args);
+
+        case 'trackPatternUsage':
+          return await trackPatternUsageHandler(args);
+
+        case 'indexPatternLibrary':
+          return await indexPatternLibraryHandler(args);
 
         // Artifacts module
         case 'searchArtifacts':
@@ -205,6 +229,13 @@ export function createServer(): Server {
 
         case 'check_constraint_violation':
           return await checkConstraintViolationHandler(args);
+
+        // Stuck module
+        case 'check_stuck_pattern':
+          return await checkStuckPatternHandler(args);
+
+        case 'get_recovery_suggestions':
+          return await getRecoverySuggestionsHandler(args);
 
         default:
           throw new Error(`Unknown tool: ${name}`);

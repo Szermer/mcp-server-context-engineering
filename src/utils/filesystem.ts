@@ -24,10 +24,17 @@ export function getSharedPatternsPath(): string {
 }
 
 /**
+ * Get the patterns subdirectory path (contains category folders)
+ */
+export function getPatternsBasePath(): string {
+  return path.join(getSharedPatternsPath(), 'patterns');
+}
+
+/**
  * Get all pattern categories
  */
 export async function getPatternCategories(): Promise<string[]> {
-  const patternsDir = getSharedPatternsPath();
+  const patternsDir = getPatternsBasePath();
 
   try {
     const entries = await fs.readdir(patternsDir, { withFileTypes: true });
@@ -49,7 +56,7 @@ export async function searchPatternsInCategory(
   keyword?: string,
   includeExecutable?: boolean
 ): Promise<PatternMetadata[]> {
-  const categoryPath = path.join(getSharedPatternsPath(), category);
+  const categoryPath = path.join(getPatternsBasePath(), category);
 
   try {
     const entries = await fs.readdir(categoryPath, { withFileTypes: true });

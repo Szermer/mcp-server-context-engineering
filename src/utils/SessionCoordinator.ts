@@ -390,17 +390,31 @@ export class SessionCoordinator {
       violated_count: 0
     };
 
-    // Save as a session note
-    await this.saveNote({
-      type: 'constraint',
-      content,
-      metadata: {
-        constraint_id: constraint.id,
-        detected_from: detectedFrom,
-        scope,
-        status: 'active',
-        keywords: constraint.keywords
-      }
+    // Generate embedding for the content
+    const embedding = await this.generateEmbedding(content);
+
+    // Create numeric point ID (required by Qdrant)
+    const pointId = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+
+    // Store in Qdrant with point_id in metadata for later updates
+    await this.qdrant.upsert(this.collectionName, {
+      points: [{
+        id: pointId,
+        vector: embedding,
+        payload: {
+          type: 'constraint',
+          content,
+          timestamp: constraint.timestamp,
+          session_id: this.sessionId,
+          project_path: this.projectPath,
+          constraint_id: constraint.id,
+          detected_from: detectedFrom,
+          scope,
+          status: 'active',
+          keywords: constraint.keywords,
+          point_id: pointId // Store for later updates
+        }
+      }]
     });
 
     console.log(`🔒 Tracked constraint: ${content}`);
@@ -440,16 +454,17 @@ export class SessionCoordinator {
       throw new Error(`Constraint not found: ${constraintId}`);
     }
 
-    // Save a new note marking it as lifted
-    await this.saveNote({
-      type: 'constraint',
-      content: `[LIFTED] ${constraint.content}`,
-      metadata: {
-        constraint_id: constraintId,
-        detected_from: constraint.metadata?.detected_from,
-        scope: constraint.metadata?.scope,
+    // Get the Qdrant point ID from metadata
+    const pointId = constraint.metadata?.point_id;
+    if (!pointId) {
+      throw new Error(`Constraint missing point_id: ${constraintId}`);
+    }
+
+    // Update the point's payload to mark it as lifted
+    await this.qdrant.setPayload(this.collectionName, {
+      points: [pointId],
+      payload: {
         status: 'lifted',
-        keywords: constraint.metadata?.keywords,
         lifted_at: new Date().toISOString()
       }
     });
